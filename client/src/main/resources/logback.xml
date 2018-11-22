@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <property name="logPath" value="/qingke/logs/push"/>
+    <property name="projectName" value="push"/>
+    <contextName>${logPath}</contextName>
+
+    <appender name="console" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%date{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <appender name="rollingFile" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${logPath}/${projectName}.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>${logPath}/${projectName}.%d{yyyy-MM-dd}-%i.log</fileNamePattern>
+            <maxHistory>30</maxHistory>
+            <TimeBasedFileNamingAndTriggeringPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
+                <MaxFileSize>30MB</MaxFileSize>
+            </TimeBasedFileNamingAndTriggeringPolicy>
+            <totalSizeCap>5000MB</totalSizeCap>
+        </rollingPolicy>
+        <encoder>
+            <pattern>%date{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+        </encoder>
+        <filter class="ch.qos.logback.classic.filter.LevelFilter">
+            <level>ERROR</level>
+            <onMatch>DENY</onMatch>
+            <onMismatch>ACCEPT</onMismatch>
+        </filter>
+    </appender>
+
+    <appender name="errorAppender" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${logPath}/${projectName}.error.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>${logPath}/${projectName}.error.%d{yyyy-MM-dd}-%i.log</fileNamePattern>
+            <maxHistory>30</maxHistory>
+            <TimeBasedFileNamingAndTriggeringPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
+                <MaxFileSize>30MB</MaxFileSize>
+            </TimeBasedFileNamingAndTriggeringPolicy>
+            <totalSizeCap>5000MB</totalSizeCap>
+        </rollingPolicy>
+        <encoder>
+            <pattern>%date{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+        </encoder>
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>ERROR</level>
+        </filter>
+    </appender>
+
+    <!--  异步输出，异步的log片段必须在同步段后面，否则不起作用  -->
+    <appender name="ASYNC_rollingFile" class="ch.qos.logback.classic.AsyncAppender">
+        <discardingThreshold>0</discardingThreshold>
+        <queueSize>1024</queueSize>
+        <appender-ref ref="rollingFile"/>
+    </appender>
+
+
+    <!--  异步输出，异步的log片段必须在同步段后面，否则不起作用  -->
+    <appender name="ASYNC_errorAppender" class="ch.qos.logback.classic.AsyncAppender">
+        <discardingThreshold>0</discardingThreshold>
+        <queueSize>1024</queueSize>
+        <appender-ref ref="errorAppender"/>
+    </appender>
+
+    <!--    <logger name="org.springframework.data.jpa" level="DEBUG" additivity="false">
+            <appender-ref ref="console"/>
+            <appender-ref ref="ASYNC_rollingFile"/>
+        </logger>
+        <logger name="org.hibernate" level="DEBUG" additivity="false">
+            <appender-ref ref="console"/>
+            <appender-ref ref="ASYNC_rollingFile"/>
+        </logger>
+        <logger name="com.mysql.cj" level="DEBUG" additivity="false">
+            <appender-ref ref="console"/>
+            <appender-ref ref="ASYNC_rollingFile"/>
+        </logger>-->
+
+    <root level="info">
+        <appender-ref ref="console"/>
+        <appender-ref ref="ASYNC_rollingFile"/>
+        <appender-ref ref="ASYNC_errorAppender"/>
+    </root>
+
+</configuration>
