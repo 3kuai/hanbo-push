@@ -9,7 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ClientDelegate {
-    private SubScriber subScriber = new SubScriber();
+    private Subscriber subScriber = new Subscriber();
     private List<Client> clients = new ArrayList<>();
 
     public ClientDelegate() {
@@ -34,6 +34,8 @@ public class ClientDelegate {
 
     @Subscribe
     public void sub(List<String> hosts) {
+        if (hosts == null)
+            clients.clear();
         for (String hostAddress : hosts) {
             Client client = new Client();
             client.initConn(HostAndPort.fromString(hostAddress).getHostText(),
@@ -43,6 +45,8 @@ public class ClientDelegate {
     }
 
     public void sendOnly(PushRequest pushRequest) {
+        if (!hasClients())
+            return;
         int val = (int) System.currentTimeMillis() % clients.size();
         try {
             clients.get(val).sendOnly(pushRequest);
@@ -52,6 +56,8 @@ public class ClientDelegate {
     }
 
     public PushResponse sendAndGet(PushRequest pushRequest) {
+        if (!hasClients())
+            return null;
         int val = (int) System.currentTimeMillis() % clients.size();
         try {
             return clients.get(val).sendAndGet(pushRequest);
@@ -59,5 +65,9 @@ public class ClientDelegate {
             clients.remove(val);
             return null;
         }
+    }
+
+    boolean hasClients() {
+        return clients.size() > 0;
     }
 }

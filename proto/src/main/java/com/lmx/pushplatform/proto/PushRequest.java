@@ -4,7 +4,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class PushRequest {
     private String requestId;
-    private int msgType;//0=注册，1=消息,2=内部事件（路由转发）
+    private int msgType;//0=注册，1=消息,2=内部事件（路由转发）,3=心跳
+    private int platform = 1;//默认1=安卓，2=ios，0=全平台
     private String fromId;
     private String toId;
     private String msgContent;
@@ -12,6 +13,14 @@ public class PushRequest {
 
     public PushRequest() {
         requestId = String.valueOf(atomicInteger.incrementAndGet());
+    }
+
+    public int getPlatform() {
+        return platform;
+    }
+
+    public void setPlatform(int platform) {
+        this.platform = platform;
     }
 
     @Override

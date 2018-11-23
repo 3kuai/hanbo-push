@@ -10,10 +10,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 
-public class SubScriber {
+public class Subscriber {
     private String REGIST_PATH = "/push";
     private String host = System.getProperty("zk.hosts");
-    private final Logger LOGGER = LoggerFactory.getLogger(SubScriber.class);
+    private final Logger LOGGER = LoggerFactory.getLogger(Subscriber.class);
     private CountDownLatch latch = new CountDownLatch(1);
     private List<String> serviceAddress = new ArrayList<>();
 
@@ -52,8 +52,7 @@ public class SubScriber {
             }
             serviceAddress = curServiceAddress;
             LOGGER.info("serviceAddress data:={}", serviceAddress);
-            if (serviceAddress.size() > 0)
-                InnerEventBus.pub(serviceAddress);
+            InnerEventBus.pub(serviceAddress);
         } catch (Exception e) {
             LOGGER.error("", e);
         }
