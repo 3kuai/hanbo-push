@@ -1,5 +1,6 @@
 package com.lmx.pushplatform.server;
 
+import com.google.common.collect.Lists;
 import com.google.common.net.HostAndPort;
 import com.lmx.pushplatform.proto.PushRequest;
 import com.lmx.pushplatform.proto.PushResponse;
@@ -38,7 +39,7 @@ public class ServerHandler extends SimpleChannelInboundHandler<PushRequest> {
         switch (request.getMsgType()) {
             /**
              *  注册事件:
-             *      1、本地注册连接；
+             *      1、本地注册表维护连接；
              *      2、redis记录路由关系
              *
              * */
@@ -54,34 +55,40 @@ public class ServerHandler extends SimpleChannelInboundHandler<PushRequest> {
              *
              */
             case 1:
-                if (channelHandlerContextMap.containsKey(request.getToId())) {
-                    PushResponse pushResponse_ = new PushResponse(request.getRequestId(), request.getMsgContent());
-                    LOGGER.info("send origin response is {}", pushResponse_);
-                    ctx.writeAndFlush(pushResponse_);
-                    PushResponse pushResponse = new PushResponse(request.getMsgContent());
-                    LOGGER.info("send dest response is {}", pushResponse);
-                    channelHandlerContextMap.get(request.getToId()).writeAndFlush(pushResponse);
-                } else {
-                    String hostAddress = jedis.get(KEY_PREFIX + request.getToId());
-                    request.setMsgType(2);
-                    if (!clientMap.containsKey(hostAddress)) {
-                        RouterClient client = new RouterClient();
-                        client.initConn(HostAndPort.fromHost(hostAddress).getHostText(),
-                                HostAndPort.fromString(hostAddress).getPort());
-                        client.send(request);
-                        clientMap.put(hostAddress, client);
+                for (String toId : request.getToId()) {
+                    if (channelHandlerContextMap.containsKey(toId)) {
+                        PushResponse pushResponse_ = new PushResponse(request.getRequestId(), request.getMsgContent());
+                        LOGGER.info("send origin response is {}", pushResponse_);
+                        ctx.writeAndFlush(pushResponse_);
+                        PushResponse pushResponse = new PushResponse(request.getMsgContent());
+                        LOGGER.info("send dest response is {}", pushResponse);
+                        channelHandlerContextMap.get(toId).writeAndFlush(pushResponse);
                     } else {
-                        clientMap.get(hostAddress).send(request);
+                        String hostAddress = jedis.get(KEY_PREFIX + toId);
+                        request.setToId(Lists.newArrayList(toId));
+                        request.setMsgType(2);
+                        if (!clientMap.containsKey(hostAddress)) {
+                            RouterClient client = new RouterClient();
+                            client.initConn(HostAndPort.fromHost(hostAddress).getHostText(),
+                                    HostAndPort.fromString(hostAddress).getPort());
+                            client.send(request);
+                            clientMap.put(hostAddress, client);
+                        } else {
+                            clientMap.get(hostAddress).send(request);
+                        }
                     }
                 }
+
                 break;
             /**
              * 内部事件（路由转发）
              */
             case 2:
-                PushResponse pushResponse = new PushResponse(request.getMsgContent());
-                LOGGER.info("router response is {}", pushResponse);
-                channelHandlerContextMap.get(request.getToId()).writeAndFlush(pushResponse);
+                for (String toId : request.getToId()) {
+                    PushResponse pushResponse = new PushResponse(request.getMsgContent());
+                    LOGGER.info("router response is {}", pushResponse);
+                    channelHandlerContextMap.get(toId).writeAndFlush(pushResponse);
+                }
                 break;
         }
     }

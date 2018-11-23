@@ -1,3 +1,4 @@
+import com.google.common.collect.Lists;
 import com.lmx.pushplatform.client.ClientDelegate;
 import com.lmx.pushplatform.proto.PushRequest;
 import org.junit.Test;
@@ -29,7 +30,7 @@ public class ClientTest {
             PushRequest pushRequest_ = new PushRequest();
             pushRequest_.setMsgType(1);
             pushRequest_.setFromId("13120615313");
-            pushRequest_.setToId("15821303235");
+            pushRequest_.setToId(Lists.newArrayList("15821303235"));
             pushRequest_.setMsgContent("this is a push message");
             clientDelegate.sendAndGet(pushRequest_);
         } catch (Exception e) {
