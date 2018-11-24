@@ -18,6 +18,7 @@ public class ClientDelegate {
     public ClientDelegate() {
         try {
             InnerEventBus.reg(this);
+            LOGGER.info("subscribe pushService thread started");
             subScriber.subScribeApp();
             initConnect();
         } catch (Exception e) {
@@ -37,8 +38,8 @@ public class ClientDelegate {
     }
 
     @Subscribe
-    public void sub(List<String> hosts) {
-        LOGGER.info("subscribe hosts={}", hosts);
+    public void eventHandler(List<String> hosts) {
+        LOGGER.info("subscriber refresh client connector address={}", hosts);
         clients.clear();
         for (String hostAddress : hosts) {
             Client client = new Client();
