@@ -48,7 +48,6 @@
         </filter>
     </appender>
 
-    <!--  异步输出，异步的log片段必须在同步段后面，否则不起作用  -->
     <appender name="ASYNC_rollingFile" class="ch.qos.logback.classic.AsyncAppender">
         <discardingThreshold>0</discardingThreshold>
         <queueSize>1024</queueSize>
@@ -56,25 +55,11 @@
     </appender>
 
 
-    <!--  异步输出，异步的log片段必须在同步段后面，否则不起作用  -->
     <appender name="ASYNC_errorAppender" class="ch.qos.logback.classic.AsyncAppender">
         <discardingThreshold>0</discardingThreshold>
         <queueSize>1024</queueSize>
         <appender-ref ref="errorAppender"/>
     </appender>
-
-    <!--    <logger name="org.springframework.data.jpa" level="DEBUG" additivity="false">
-            <appender-ref ref="console"/>
-            <appender-ref ref="ASYNC_rollingFile"/>
-        </logger>
-        <logger name="org.hibernate" level="DEBUG" additivity="false">
-            <appender-ref ref="console"/>
-            <appender-ref ref="ASYNC_rollingFile"/>
-        </logger>
-        <logger name="com.mysql.cj" level="DEBUG" additivity="false">
-            <appender-ref ref="console"/>
-            <appender-ref ref="ASYNC_rollingFile"/>
-        </logger>-->
 
     <root level="info">
         <appender-ref ref="console"/>
