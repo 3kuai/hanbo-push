@@ -55,11 +55,11 @@ public class ServerHandler extends SimpleChannelInboundHandler<PushRequest> {
              *
              */
             case 1:
+                if (request.getToId() == null) {
+                    return;
+                }
                 for (String toId : request.getToId()) {
                     if (channelHandlerContextMap.containsKey(toId)) {
-                        PushResponse pushResponse_ = new PushResponse(request.getRequestId(), request.getMsgContent());
-                        LOGGER.info("send origin response is {}", pushResponse_);
-                        ctx.writeAndFlush(pushResponse_);
                         PushResponse pushResponse = new PushResponse(request.getMsgContent());
                         LOGGER.info("send dest response is {}", pushResponse);
                         channelHandlerContextMap.get(toId).writeAndFlush(pushResponse);
@@ -67,6 +67,10 @@ public class ServerHandler extends SimpleChannelInboundHandler<PushRequest> {
                         String hostAddress = jedis.get(KEY_PREFIX + toId);
                         request.setToId(Lists.newArrayList(toId));
                         request.setMsgType(2);
+                        if (hostAddress == null) {
+                            LOGGER.warn("user has no register router...");
+                            return;
+                        }
                         if (!clientMap.containsKey(hostAddress)) {
                             RouterClient client = new RouterClient();
                             client.initConn(HostAndPort.fromHost(hostAddress).getHostText(),
@@ -74,9 +78,18 @@ public class ServerHandler extends SimpleChannelInboundHandler<PushRequest> {
                             client.send(request);
                             clientMap.put(hostAddress, client);
                         } else {
-                            clientMap.get(hostAddress).send(request);
+                            try {
+                                clientMap.get(hostAddress).send(request);
+                            } catch (Exception e) {
+                                clientMap.remove(hostAddress);
+                                throw e;
+                            }
                         }
                     }
+                    PushResponse pushResponse_ = new PushResponse(request.getRequestId(), "发送成功");
+                    LOGGER.info("send origin response is {}", pushResponse_);
+                    //回复调用者
+                    ctx.writeAndFlush(pushResponse_);
                 }
 
                 break;
@@ -96,7 +109,6 @@ public class ServerHandler extends SimpleChannelInboundHandler<PushRequest> {
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
-        ctx.close();
         String userId = channelHandlerContextMap_.remove(ctx);
         jedis.del(KEY_PREFIX + userId);
         channelHandlerContextMap.remove(userId);

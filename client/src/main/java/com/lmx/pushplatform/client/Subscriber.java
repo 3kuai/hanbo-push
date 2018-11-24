@@ -16,6 +16,7 @@ public class Subscriber {
     private final Logger LOGGER = LoggerFactory.getLogger(Subscriber.class);
     private CountDownLatch latch = new CountDownLatch(1);
     private List<String> serviceAddress = new ArrayList<>();
+    private boolean isInit = true;
 
     public List<String> getServiceAddress() {
         return serviceAddress;
@@ -51,8 +52,10 @@ public class Subscriber {
                 curServiceAddress.add(new String(bytes));
             }
             serviceAddress = curServiceAddress;
-            LOGGER.info("serviceAddress data:={}", serviceAddress);
-            InnerEventBus.pub(serviceAddress);
+            LOGGER.info("serviceAddress data={}", serviceAddress);
+            if (!isInit)
+                InnerEventBus.pub(serviceAddress);
+            isInit = false;
         } catch (Exception e) {
             LOGGER.error("", e);
         }

@@ -5,7 +5,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class PushRequest {
     private String requestId;
-    private int msgType;//0=注册，1=消息,2=内部事件（路由转发）,3=心跳
+    private int msgType;//0=注册，1=推送消息,2=内部事件（路由转发）,3=心跳，4=IM消息
     private int platform = 1;//默认1=安卓，2=ios，0=全平台
     private String fromId;
     private List<String> toId;
