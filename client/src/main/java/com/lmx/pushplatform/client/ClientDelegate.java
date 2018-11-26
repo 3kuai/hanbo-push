@@ -77,4 +77,8 @@ public class ClientDelegate {
     boolean hasClients() {
         return clients.size() > 0;
     }
+
+    public List<Client> getClients() {
+        return clients;
+    }
 }
