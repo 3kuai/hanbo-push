@@ -1,4 +1,4 @@
-package com.lmx.pushplatform.client;
+package com.lmx.gateway;
 
 import com.lmx.pushplatform.proto.PushDecoder;
 import com.lmx.pushplatform.proto.PushEncoder;

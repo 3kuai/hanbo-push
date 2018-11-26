@@ -4,6 +4,8 @@ import com.google.common.eventbus.Subscribe;
 import com.google.common.net.HostAndPort;
 import com.lmx.pushplatform.proto.PushRequest;
 import com.lmx.pushplatform.proto.PushResponse;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -11,13 +13,16 @@ import java.util.List;
 public class ClientDelegate {
     private Subscriber subScriber = new Subscriber();
     private List<Client> clients = new ArrayList<>();
+    private final Logger LOGGER = LoggerFactory.getLogger(ClientDelegate.class);
 
     public ClientDelegate() {
         try {
+            InnerEventBus.reg(this);
+            LOGGER.info("subscribe pushService thread started");
             subScriber.subScribeApp();
             initConnect();
         } catch (Exception e) {
-            e.printStackTrace();
+            LOGGER.error("", e);
         }
     }
 
@@ -33,9 +38,9 @@ public class ClientDelegate {
     }
 
     @Subscribe
-    public void sub(List<String> hosts) {
-        if (hosts == null)
-            clients.clear();
+    public void eventHandler(List<String> hosts) {
+        LOGGER.info("subscriber refresh client connector address={}", hosts);
+        clients.clear();
         for (String hostAddress : hosts) {
             Client client = new Client();
             client.initConn(HostAndPort.fromString(hostAddress).getHostText(),
@@ -51,6 +56,7 @@ public class ClientDelegate {
         try {
             clients.get(val).sendOnly(pushRequest);
         } catch (Exception e) {
+            LOGGER.error("", e);
             clients.remove(val);
         }
     }
@@ -62,6 +68,7 @@ public class ClientDelegate {
         try {
             return clients.get(val).sendAndGet(pushRequest);
         } catch (Exception e) {
+            LOGGER.error("", e);
             clients.remove(val);
             return null;
         }

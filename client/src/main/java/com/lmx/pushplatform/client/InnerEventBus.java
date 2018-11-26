@@ -8,4 +8,8 @@ public class InnerEventBus {
     public static void pub(Object o) {
         eventBus.post(o);
     }
+
+    public static void reg(Object o) {
+        eventBus.register(o);
+    }
 }

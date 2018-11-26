@@ -1,5 +1,6 @@
-package com.lmx.pushplatform.client;
+package com.lmx.gateway;
 
+import com.lmx.pushplatform.client.ClientDelegate;
 import com.lmx.pushplatform.proto.PushRequest;
 import com.lmx.pushplatform.proto.PushResponse;
 import io.netty.channel.ChannelHandler;

@@ -16,6 +16,7 @@ public class Subscriber {
     private final Logger LOGGER = LoggerFactory.getLogger(Subscriber.class);
     private CountDownLatch latch = new CountDownLatch(1);
     private List<String> serviceAddress = new ArrayList<>();
+    private boolean isInit = true;
 
     public List<String> getServiceAddress() {
         return serviceAddress;
@@ -28,7 +29,6 @@ public class Subscriber {
                 if (event.getState() == Event.KeeperState.SyncConnected) {
                     latch.countDown();
                 }
-                LOGGER.info("push client sub ok,event={}", event);
             }
         });
         latch.await();
@@ -40,7 +40,7 @@ public class Subscriber {
             List<String> nodeList = zooKeeper.getChildren(REGIST_PATH + "/apps", new Watcher() {
                 @Override
                 public void process(WatchedEvent event) {
-                    if (event.getType() == Event.EventType.NodeDataChanged) {
+                    if (event.getType() == Event.EventType.NodeChildrenChanged) {
                         watchNode(zooKeeper);
                     }
                 }
@@ -51,8 +51,10 @@ public class Subscriber {
                 curServiceAddress.add(new String(bytes));
             }
             serviceAddress = curServiceAddress;
-            LOGGER.info("serviceAddress data:={}", serviceAddress);
-            InnerEventBus.pub(serviceAddress);
+            LOGGER.info("current online pushService node={}", serviceAddress);
+            if (!isInit)
+                InnerEventBus.pub(serviceAddress);
+            isInit = false;
         } catch (Exception e) {
             LOGGER.error("", e);
         }
