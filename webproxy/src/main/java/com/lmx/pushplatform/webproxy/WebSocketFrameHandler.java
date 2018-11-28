@@ -52,18 +52,17 @@ public class WebSocketFrameHandler extends SimpleChannelInboundHandler<WebSocket
                 int val = (int) System.currentTimeMillis() % clients.size();
                 String clientInfo = clients.get(Math.abs(val)).toString();
                 ClientProxy clientProxy = new ClientProxy(HostAndPort.fromString(clientInfo).getHostText(),
-                        HostAndPort.fromString(clientInfo).getPort(), ctx.channel());
+                        HostAndPort.fromString(clientInfo).getPort(), ctx);
                 clientProxyMap.put(appKey, clientProxy);
             } else {
                 channelHandlerContextMap.get(appKey).add(ctx);
-                clientProxyMap.get(appKey).addClient(ctx.channel());
+                clientProxyMap.get(appKey).addClient(ctx);
             }
             PushRequest regApp = new PushRequest();
             regApp.setMsgType(0);
             regApp.setFromId(appKey);
+            //注册proxy client
             clientProxyMap.get(appKey).sendOnly(regApp);
-        } else if (frame instanceof CloseWebSocketFrame) {
-
         }
     }
 
@@ -71,7 +70,7 @@ public class WebSocketFrameHandler extends SimpleChannelInboundHandler<WebSocket
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
         LOGGER.error("", cause);
         ctx.close();
-        //协助连接
+        //卸载连接
         if (channelHandlerContextMap.values().contains(ctx)) {
             channelHandlerContextMap.values().remove(ctx);
         }

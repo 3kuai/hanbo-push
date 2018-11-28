@@ -9,7 +9,7 @@
                           socket = new WebSocket("ws://127.0.0.1:8858/websocket"); 
                           socket.onmessage = function(event) { 
                             var ta = document.getElementById('responseText'); 
-                            ta.value = ta.value + 'n' + event.data 
+                            ta.value = ta.value + '\n' + event.data
                           }; 
                           socket.onopen = function(event) { 
                             var ta = document.getElementById('responseText'); 
@@ -33,7 +33,7 @@
                         }
                         </script> 
                         <form onsubmit="return false;">
-                          <!--  { "msgType":1, "appKey":"15821303235"}-->
+                          <!--  {"msgType":1,"appKey":"15821303235"}-->
                         <input type="text" name="message" value="Hello, World!"/> +
                         <input type="button" value="Send Web Socket Data" 
                                onclick="send(this.form.message.value)" /> 

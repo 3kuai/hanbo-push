@@ -30,9 +30,9 @@ public class ClientProxy extends SimpleChannelInboundHandler<PushResponse> {
     private final Logger LOGGER = LoggerFactory.getLogger(ClientProxy.class);
     private String host;
     private int port;
-    private List<Channel> destChannels = Lists.newArrayList();
+    private List<ChannelHandlerContext> destChannels = Lists.newArrayList();
 
-    public void addClient(Channel channel){
+    public void addClient(ChannelHandlerContext channel){
         this.destChannels.add(channel);
     }
 
@@ -41,7 +41,7 @@ public class ClientProxy extends SimpleChannelInboundHandler<PushResponse> {
         return host + ":" + port;
     }
 
-    public ClientProxy(String host, int port, Channel channel) {
+    public ClientProxy(String host, int port, ChannelHandlerContext channel) {
         this.destChannels.add(channel);
         EventLoopGroup group = new NioEventLoopGroup(Runtime.getRuntime().availableProcessors() * 2);
         Bootstrap bootstrap = new Bootstrap();
@@ -69,7 +69,7 @@ public class ClientProxy extends SimpleChannelInboundHandler<PushResponse> {
     protected void channelRead0(ChannelHandlerContext ctx, PushResponse response) throws Exception {
         String seqNo = response.getRequestId();
         if (seqNo == null) {
-            for (Channel channel : destChannels) {
+            for (ChannelHandlerContext channel : destChannels) {
                 TextWebSocketFrame textWebSocketFrame = new TextWebSocketFrame(JSONObject.toJSONString(response));
                 channel.writeAndFlush(textWebSocketFrame);
             }
