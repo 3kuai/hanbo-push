@@ -34,7 +34,7 @@ public class ServerHandler extends SimpleChannelInboundHandler<PushRequest> {
 
     @Override
     public void channelRead0(final ChannelHandlerContext ctx, PushRequest request) throws Exception {
-        LOGGER.debug("request is {}", request);
+        LOGGER.info("request is {}", request);
         ctx.writeAndFlush(request);
         switch (request.getMsgType()) {
             /**

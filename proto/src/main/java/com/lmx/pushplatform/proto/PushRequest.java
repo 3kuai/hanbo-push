@@ -10,6 +10,7 @@ public class PushRequest {
     private String fromId;
     private List<String> toId;
     private String msgContent;
+    private String appKey;
     private static final AtomicInteger atomicInteger = new AtomicInteger(1);
 
     public PushRequest() {
@@ -25,7 +26,16 @@ public class PushRequest {
                 ", fromId='" + fromId + '\'' +
                 ", toId=" + toId +
                 ", msgContent='" + msgContent + '\'' +
+                ", appKey='" + appKey + '\'' +
                 '}';
+    }
+
+    public String getAppKey() {
+        return appKey;
+    }
+
+    public void setAppKey(String appKey) {
+        this.appKey = appKey;
     }
 
     public String getRequestId() {
