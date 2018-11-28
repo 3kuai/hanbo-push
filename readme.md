@@ -1,6 +1,8 @@
 # 推送核心服务
 
-基于推送架构图设计，参考公众号文章（51CTO技术栈）微信id:blog51cto
+>架构设计
+
+![推送架构图](https://github.com/lmx1989219/push-core/blob/master/%E6%8E%A8%E9%80%81%E6%9E%B6%E6%9E%84.jpg)
 
 >IM即时通信和应用推送合二为一
 

@@ -12,7 +12,7 @@
         <module>client</module>
         <module>server</module>
         <module>proto</module>
-        <module>gateway</module>
+        <module>webproxy</module>
     </modules>
 
     <properties>
