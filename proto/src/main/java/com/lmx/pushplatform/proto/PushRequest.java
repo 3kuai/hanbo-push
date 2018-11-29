@@ -14,6 +14,34 @@ public class PushRequest {
     private String appKey;
     private static final AtomicInteger atomicInteger = new AtomicInteger(1);
 
+    public enum Platform {
+        ANDROID, IOS, WEB, ALL
+    }
+
+    public enum PushType {
+        NULL, PUSH, IM;
+
+    }
+
+    public enum MessageType {
+        REGISTY, DILIVERY_MSG, ROUTER_FORWAR, HEARTBEAT,NIL;
+
+        public static MessageType getMessageType(int type) {
+            switch (type) {
+                case 0:
+                    return REGISTY;
+                case 1:
+                    return DILIVERY_MSG;
+                case 2:
+                    return ROUTER_FORWAR;
+                case 3:
+                    return HEARTBEAT;
+                default:
+                    return NIL;
+            }
+        }
+    }
+
     public PushRequest() {
         requestId = String.valueOf(atomicInteger.incrementAndGet());
     }

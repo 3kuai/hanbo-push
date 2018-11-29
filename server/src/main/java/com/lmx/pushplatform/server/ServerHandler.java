@@ -25,7 +25,9 @@ public class ServerHandler extends SimpleChannelInboundHandler<PushRequest> {
     private Map<String, ChannelHandlerContext> channelHandlerContextMap = new ConcurrentHashMap<>(12);
     private AttributeKey<String> attributeKey = AttributeKey.newInstance("regIdentify");
     private Map<String, RouterClient> clientMap = new ConcurrentHashMap<>(2);
-    private static final String KEY_PREFIX = "push:user:";
+    private static final String SPLITTER = ":";
+    private static final String PUSH_KEY_PREFIX = "push" + SPLITTER + "user" + SPLITTER;
+    private static final String IM_KEY_PREFIX = "im" + SPLITTER + "user" + SPLITTER;
 
     public ServerHandler() {
         jedis = new Jedis();
@@ -36,17 +38,26 @@ public class ServerHandler extends SimpleChannelInboundHandler<PushRequest> {
     @Override
     public void channelRead0(final ChannelHandlerContext ctx, PushRequest request) throws Exception {
         LOGGER.info("request is {}", request);
-        switch (request.getMsgType()) {
+        switch (PushRequest.MessageType.getMessageType(request.getMsgType())) {
             /**
              *  注册事件:
              *      1、本地注册表维护连接；
              *      2、redis记录路由关系
              *
              * */
-            case 0:
-                channelHandlerContextMap.put(request.getFromId(), ctx);
-                ctx.channel().attr(attributeKey).set(request.getFromId());
-                jedis.set(KEY_PREFIX + request.getFromId(), Server.host + ":" + Server.port);
+            case REGISTY:
+                String regId = request.getFromId();
+                String realRegId = null;
+                //推送
+                if (request.getPushType() == PushRequest.PushType.PUSH.ordinal()) {
+                    realRegId = request.getAppKey() + SPLITTER + PUSH_KEY_PREFIX + regId;
+                }//IM
+                else if (request.getPushType() == PushRequest.PushType.IM.ordinal()) {
+                    realRegId = request.getAppKey() + SPLITTER + IM_KEY_PREFIX + regId;
+                }
+                channelHandlerContextMap.put(realRegId, ctx);
+                ctx.channel().attr(attributeKey).set(realRegId);
+                jedis.set(realRegId, Server.host + SPLITTER + Server.port);
                 LOGGER.info("reg channel is {}", ctx.channel());
                 break;
             /**
@@ -54,17 +65,27 @@ public class ServerHandler extends SimpleChannelInboundHandler<PushRequest> {
              *  检查本地连接表，如果没有查询redis取出路由地址，把请求转发到其他server去处理
              *
              */
-            case 1:
+            case DILIVERY_MSG:
                 if (request.getToId() == null) {
                     return;
                 }
+
                 for (String toId : request.getToId()) {
-                    if (channelHandlerContextMap.containsKey(toId)) {
+                    String pushToId = null;
+                    //推送
+                    if (request.getPushType() == PushRequest.PushType.PUSH.ordinal()) {
+                        pushToId = request.getAppKey() + SPLITTER + PUSH_KEY_PREFIX + toId;
+                    }
+                    //IM
+                    else if (request.getPushType() == PushRequest.PushType.IM.ordinal()) {
+                        pushToId = request.getAppKey() + SPLITTER + IM_KEY_PREFIX + toId;
+                    }
+                    if (channelHandlerContextMap.containsKey(pushToId)) {
                         PushResponse pushResponse = new PushResponse(request.getMsgContent());
                         LOGGER.info("send dest response is {}", pushResponse);
-                        channelHandlerContextMap.get(toId).writeAndFlush(pushResponse);
+                        channelHandlerContextMap.get(pushToId).writeAndFlush(pushResponse);
                     } else {
-                        String hostAddress = jedis.get(KEY_PREFIX + toId);
+                        String hostAddress = jedis.get(pushToId);
                         request.setToId(Lists.newArrayList(toId));
                         request.setMsgType(2);
                         if (hostAddress == null) {
@@ -91,16 +112,24 @@ public class ServerHandler extends SimpleChannelInboundHandler<PushRequest> {
                     //回复调用者
                     ctx.writeAndFlush(pushResponse_);
                 }
-
                 break;
             /**
              * 内部事件（路由转发）
              */
-            case 2:
+            case ROUTER_FORWAR:
                 for (String toId : request.getToId()) {
+                    String pushToId = null;
+                    //推送
+                    if (request.getPushType() == PushRequest.PushType.PUSH.ordinal()) {
+                        pushToId = request.getAppKey() + SPLITTER + PUSH_KEY_PREFIX + toId;
+                    }
+                    //IM
+                    else if (request.getPushType() == PushRequest.PushType.IM.ordinal()) {
+                        pushToId = request.getAppKey() + SPLITTER + IM_KEY_PREFIX + toId;
+                    }
                     PushResponse pushResponse = new PushResponse(request.getMsgContent());
                     LOGGER.info("router response is {}", pushResponse);
-                    channelHandlerContextMap.get(toId).writeAndFlush(pushResponse);
+                    channelHandlerContextMap.get(pushToId).writeAndFlush(pushResponse);
                 }
                 break;
         }
@@ -112,7 +141,7 @@ public class ServerHandler extends SimpleChannelInboundHandler<PushRequest> {
         ctx.close();
         String id = ctx.channel().attr(attributeKey).get();
         if (id != null) {
-            jedis.del(KEY_PREFIX + id);
+            jedis.del(id);
             channelHandlerContextMap.remove(id);
         }
     }
@@ -123,7 +152,7 @@ public class ServerHandler extends SimpleChannelInboundHandler<PushRequest> {
         ctx.close();
         String id = ctx.channel().attr(attributeKey).get();
         if (id != null) {
-            jedis.del(KEY_PREFIX + id);
+            jedis.del(id);
             channelHandlerContextMap.remove(id);
         }
     }
