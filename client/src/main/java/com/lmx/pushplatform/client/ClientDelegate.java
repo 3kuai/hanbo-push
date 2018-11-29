@@ -61,7 +61,7 @@ public class ClientDelegate {
     }
 
     @Subscribe
-    public void eventHandler(List<String> hosts) {
+    public synchronized void eventHandler(List<String> hosts) {
         LOGGER.info("subscriber refresh client connector address={}", hosts);
         clients.clear();
         for (String hostAddress : hosts) {
@@ -72,7 +72,7 @@ public class ClientDelegate {
         }
     }
 
-    public void sendOnly(PushRequest pushRequest) {
+    public synchronized void sendOnly(PushRequest pushRequest) {
         if (!hasClients())
             return;
         int val = (int) System.currentTimeMillis() % clients.size();
@@ -84,7 +84,7 @@ public class ClientDelegate {
         }
     }
 
-    public PushResponse sendAndGet(PushRequest pushRequest) {
+    public synchronized PushResponse sendAndGet(PushRequest pushRequest) {
         if (!hasClients())
             return null;
         int val = (int) System.currentTimeMillis() % clients.size();
@@ -105,14 +105,14 @@ public class ClientDelegate {
         return clients;
     }
 
-    public void removeImCallBackChannel(ChannelHandlerContext channelHandlerContext) {
+    public synchronized void removeImCallBackChannel(ChannelHandlerContext channelHandlerContext) {
         for (Client c : clients) {
             c.getCallBackClients().remove(channelHandlerContext);
             c.close();
         }
     }
 
-    public void removeAppCallBackChannel(ChannelHandlerContext channelHandlerContext) {
+    public synchronized void removeAppCallBackChannel(ChannelHandlerContext channelHandlerContext) {
         for (Client c : clients) {
             c.getCallBackClients().remove(channelHandlerContext);
             if (c.getCallBackClients().size() == 0) {

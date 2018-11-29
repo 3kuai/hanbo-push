@@ -97,6 +97,17 @@ public class WebSocketFrameHandler extends SimpleChannelInboundHandler<WebSocket
     @Override
     public void channelInactive(ChannelHandlerContext ctx) throws Exception {
         super.channelInactive(ctx);
+        close(ctx);
+    }
+
+
+    @Override
+    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
+        LOGGER.error("", cause);
+        close(ctx);
+    }
+
+    void close(ChannelHandlerContext ctx) {
         //关闭ws连接
         ctx.close();
         //IM卸载
@@ -116,13 +127,5 @@ public class WebSocketFrameHandler extends SimpleChannelInboundHandler<WebSocket
             pushClientMap.get(appKey).removeAppCallBackChannel(ctx);
             pushClientMap.remove(appKey);
         }
-    }
-
-
-    @Override
-    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
-        LOGGER.error("", cause);
-        //关闭ws连接
-        ctx.close();
     }
 }
