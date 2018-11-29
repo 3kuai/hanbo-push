@@ -1,5 +1,6 @@
 package com.lmx.pushplatform.client;
 
+import com.alibaba.fastjson.JSONObject;
 import com.lmx.pushplatform.proto.PushDecoder;
 import com.lmx.pushplatform.proto.PushEncoder;
 import com.lmx.pushplatform.proto.PushRequest;
@@ -9,11 +10,14 @@ import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
+import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
@@ -25,10 +29,20 @@ public class Client extends SimpleChannelInboundHandler<PushResponse> {
     private final Logger LOGGER = LoggerFactory.getLogger(Client.class);
     private String host;
     private int port;
+    private List<ChannelHandlerContext> destChannels = new CopyOnWriteArrayList<>();
 
     @Override
     public String toString() {
         return host + ":" + port;
+    }
+
+    public void addCallBack(ChannelHandlerContext context) {
+        this.destChannels.add(context);
+    }
+
+    public void initConn(String host, int port, ChannelHandlerContext channel) {
+        this.destChannels.add(channel);
+        this.initConn(host, port);
     }
 
     public void initConn(String host, int port) {
@@ -58,6 +72,15 @@ public class Client extends SimpleChannelInboundHandler<PushResponse> {
     protected void channelRead0(ChannelHandlerContext ctx, PushResponse response) throws Exception {
         String seqNo = response.getRequestId();
         if (seqNo == null) {
+            for (ChannelHandlerContext channel : destChannels) {
+                //坏连接则剔除
+                if (!channel.channel().isOpen()) {
+                    destChannels.remove(channel);
+                    continue;
+                }
+                TextWebSocketFrame textWebSocketFrame = new TextWebSocketFrame(JSONObject.toJSONString(response));
+                channel.writeAndFlush(textWebSocketFrame);
+            }
             LOGGER.info("receive message={}", response);
             return;
         }

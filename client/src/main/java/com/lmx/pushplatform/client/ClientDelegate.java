@@ -4,6 +4,7 @@ import com.google.common.eventbus.Subscribe;
 import com.google.common.net.HostAndPort;
 import com.lmx.pushplatform.proto.PushRequest;
 import com.lmx.pushplatform.proto.PushResponse;
+import io.netty.channel.ChannelHandlerContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -23,6 +24,28 @@ public class ClientDelegate {
             initConnect();
         } catch (Exception e) {
             LOGGER.error("", e);
+        }
+    }
+
+    public ClientDelegate(ChannelHandlerContext channelHandlerContext) {
+        try {
+            InnerEventBus.reg(this);
+            LOGGER.info("subscribe pushService thread started");
+            subScriber.subScribeApp();
+            initConnect(channelHandlerContext);
+        } catch (Exception e) {
+            LOGGER.error("", e);
+        }
+    }
+
+    public void initConnect(ChannelHandlerContext channelHandlerContext) {
+        List<String> hosts = subScriber.getServiceAddress();
+        for (int i = 0; i < hosts.size(); i++) {
+            String hostAddress = hosts.get(i);
+            Client client = new Client();
+            client.initConn(HostAndPort.fromString(hostAddress).getHostText(),
+                    HostAndPort.fromString(hostAddress).getPort(), channelHandlerContext);
+            clients.add(client);
         }
     }
 
