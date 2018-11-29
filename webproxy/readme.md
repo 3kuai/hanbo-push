@@ -1,6 +1,6 @@
 # web客户端代理
 
-对web端作为长连接（sse/webSocket）代理客户端
+对web端作为长连接（webSocket）代理客户端
 
  1. 点对点推送（聊天室）
  2. 心跳检测

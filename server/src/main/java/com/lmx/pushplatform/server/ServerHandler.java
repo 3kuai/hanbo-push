@@ -7,6 +7,7 @@ import com.lmx.pushplatform.proto.PushResponse;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
+import io.netty.util.AttributeKey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import redis.clients.jedis.Jedis;
@@ -22,7 +23,7 @@ public class ServerHandler extends SimpleChannelInboundHandler<PushRequest> {
     private static final Logger LOGGER = LoggerFactory.getLogger(ServerHandler.class);
     private Jedis jedis;
     private Map<String, ChannelHandlerContext> channelHandlerContextMap = new ConcurrentHashMap<>(12);
-    private Map<ChannelHandlerContext, String> channelHandlerContextMap_ = new ConcurrentHashMap<>(12);
+    private AttributeKey<String> attributeKey = AttributeKey.newInstance("regIdentify");
     private Map<String, RouterClient> clientMap = new ConcurrentHashMap<>(2);
     private static final String KEY_PREFIX = "push:user:";
 
@@ -44,7 +45,7 @@ public class ServerHandler extends SimpleChannelInboundHandler<PushRequest> {
              * */
             case 0:
                 channelHandlerContextMap.put(request.getFromId(), ctx);
-                channelHandlerContextMap_.put(ctx, request.getFromId());
+                ctx.channel().attr(attributeKey).set(request.getFromId());
                 jedis.set(KEY_PREFIX + request.getFromId(), Server.host + ":" + Server.port);
                 LOGGER.info("reg channel is {}", ctx.channel());
                 break;
@@ -105,11 +106,26 @@ public class ServerHandler extends SimpleChannelInboundHandler<PushRequest> {
         }
     }
 
+    @Override
+    public void channelInactive(ChannelHandlerContext ctx) throws Exception {
+        super.channelInactive(ctx);
+        ctx.close();
+        String id = ctx.channel().attr(attributeKey).get();
+        if (id != null) {
+            jedis.del(KEY_PREFIX + id);
+            channelHandlerContextMap.remove(id);
+        }
+    }
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
-        String userId = channelHandlerContextMap_.remove(ctx);
-        jedis.del(KEY_PREFIX + userId);
-        channelHandlerContextMap.remove(userId);
+        LOGGER.error("", cause);
+        ctx.close();
+        String id = ctx.channel().attr(attributeKey).get();
+        if (id != null) {
+            jedis.del(KEY_PREFIX + id);
+            channelHandlerContextMap.remove(id);
+        }
     }
+
 }

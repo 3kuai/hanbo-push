@@ -1,44 +1,89 @@
-<html><head><title>Web Socket Test</title></head> 
-                        <body> 
-                        <script type="text/javascript"> 
-                        var socket; 
-                        if (!window.WebSocket) { 
-                          window.WebSocket = window.MozWebSocket; 
-                        }
-                        if (window.WebSocket) { 
-                          socket = new WebSocket("ws://127.0.0.1:8858/websocket"); 
-                          socket.onmessage = function(event) { 
-                            var ta = document.getElementById('responseText'); 
-                            ta.value = ta.value + '\n' + event.data
-                          }; 
-                          socket.onopen = function(event) { 
-                            var ta = document.getElementById('responseText'); 
-                            ta.value = "Web Socket opened!"; 
-                          }; 
-                          socket.onclose = function(event) { 
-                            var ta = document.getElementById('responseText'); 
-                            ta.value = ta.value + "Web Socket closed";  
-                          }; 
-                        } else { 
-                          alert("Your browser does not support Web Socket."); 
-                        } 
-                        
-                        function send(message) { 
-                          if (!window.WebSocket) { return; } 
-                          if (socket.readyState == WebSocket.OPEN) { 
-                            socket.send(message); 
-                          } else { 
-                            alert("The socket is not open."); 
-                          } 
-                        }
-                        </script> 
-                        <form onsubmit="return false;">
-                          <!--  {"msgType":1,"appKey":"15821303235"}-->
-                        <input type="text" name="message" value="Hello, World!"/> +
-                        <input type="button" value="Send Web Socket Data" 
-                               onclick="send(this.form.message.value)" /> 
-                        <h3>Output</h3> 
-                        <textarea id="responseText" style="width:500px;height:300px;"></textarea> 
-                        </form> 
-                        </body> 
-                        </html>
+<html>
+<head><title>Web Socket Test</title></head>
+<body>
+<script type="text/javascript">
+
+    var socket;
+    if (!window.WebSocket) {
+        window.WebSocket = window.MozWebSocket;
+    }
+    if (window.WebSocket) {
+        socket = new WebSocket("ws://127.0.0.1:8858/pushProxy");
+        var resp;
+        var heartCheck = {
+            timeout: 3000,
+            timeoutObj: null,
+            serverTimeoutObj: null,
+            start: function () {
+                var self = this;
+                this.timeoutObj && clearTimeout(this.timeoutObj);
+                this.serverTimeoutObj && clearTimeout(this.serverTimeoutObj);
+                this.timeoutObj = setTimeout(function () {
+                        console.log('heartCheck start');
+                        socket.send("{\"msgType\":3}");
+                        self.serverTimeoutObj = setTimeout(function () {
+                            if (!resp) {
+                                console.log('wait timeOut,close ws client');
+                                socket.close();
+                            }else{
+                                resp = null;
+                                heartCheck.start();
+                            }
+                        }, self.timeout);
+                    }, this.timeout
+                )
+            }
+        }
+
+        socket.onmessage = function (event) {
+            var ta = document.getElementById('responseText');
+            ta.value = ta.value + '\n' + event.data;
+            resp = event.data;
+        };
+        socket.onopen = function (event) {
+            var ta = document.getElementById('responseText');
+            ta.value = "Web Socket opened!";
+            heartCheck.start();
+        };
+        socket.onclose = function (event) {
+            var ta = document.getElementById('responseText');
+            ta.value = ta.value + "Web Socket closed";
+        };
+    } else {
+        alert("Your browser does not support Web Socket.");
+    }
+
+    function send(message) {
+        if (!window.WebSocket) {
+            return;
+        }
+        if (socket.readyState == WebSocket.OPEN) {
+            socket.send(message);
+        } else {
+            alert("The socket is not open.");
+        }
+    }
+
+
+</script>
+<form onsubmit="return false;">
+    <!--                            //reg
+                                { "msgType":0, "fromId":"15821303235","pushType":2}
+                                //pubmsg
+                                { "msgType":1, "toId":["13120615313"],"pushType":2,"msgContent":"b push"}
+
+                                //reg
+                                { "msgType":0, "fromId":"13120615313","pushType":2}
+                                //pubmsg
+                                { "msgType":1, "toId":["15821303235"],"pushType":2,"msgContent":"a push"}-->
+
+    <input type="text" name="message" value="Hello, World!"/> +
+    <input type="button" value="Send Web Socket Data"
+           onclick="send(this.form.message.value)"/>
+    <input type="button" value="close client"
+           onclick="socket.close()"/>
+    <h3>Output</h3>
+    <textarea id="responseText" style="width:500px;height:300px;"></textarea>
+</form>
+</body>
+</html>

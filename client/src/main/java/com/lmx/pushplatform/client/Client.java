@@ -30,6 +30,7 @@ public class Client extends SimpleChannelInboundHandler<PushResponse> {
     private String host;
     private int port;
     private List<ChannelHandlerContext> destChannels = new CopyOnWriteArrayList<>();
+    private EventLoopGroup group = new NioEventLoopGroup();
 
     @Override
     public String toString() {
@@ -40,13 +41,16 @@ public class Client extends SimpleChannelInboundHandler<PushResponse> {
         this.destChannels.add(context);
     }
 
+    public List<ChannelHandlerContext> getCallBackClients() {
+        return this.destChannels;
+    }
+
     public void initConn(String host, int port, ChannelHandlerContext channel) {
         this.destChannels.add(channel);
         this.initConn(host, port);
     }
 
     public void initConn(String host, int port) {
-        EventLoopGroup group = new NioEventLoopGroup(Runtime.getRuntime().availableProcessors() * 2);
         Bootstrap bootstrap = new Bootstrap();
         bootstrap.group(group).channel(NioSocketChannel.class).handler(new ChannelInitializer<SocketChannel>() {
             @Override
@@ -114,5 +118,10 @@ public class Client extends SimpleChannelInboundHandler<PushResponse> {
     void checkConn() throws Exception {
         if (!channel.isOpen())
             throw new Exception("conn is close");
+    }
+
+    public void close() {
+        channel.close();
+        group.shutdownGracefully();
     }
 }

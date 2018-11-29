@@ -104,4 +104,20 @@ public class ClientDelegate {
     public List<Client> getClients() {
         return clients;
     }
+
+    public void removeImCallBackChannel(ChannelHandlerContext channelHandlerContext) {
+        for (Client c : clients) {
+            c.getCallBackClients().remove(channelHandlerContext);
+            c.close();
+        }
+    }
+
+    public void removeAppCallBackChannel(ChannelHandlerContext channelHandlerContext) {
+        for (Client c : clients) {
+            c.getCallBackClients().remove(channelHandlerContext);
+            if (c.getCallBackClients().size() == 0) {
+                c.close();
+            }
+        }
+    }
 }

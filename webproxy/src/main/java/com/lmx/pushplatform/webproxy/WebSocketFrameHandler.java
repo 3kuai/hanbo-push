@@ -10,22 +10,22 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
 import io.netty.handler.codec.http.websocketx.WebSocketFrame;
+import io.netty.util.AttributeKey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-/**
- * Echoes uppercase content of text frames.
- */
 @ChannelHandler.Sharable
 public class WebSocketFrameHandler extends SimpleChannelInboundHandler<WebSocketFrame> {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(WebSocketFrameHandler.class);
-    private Map<String, ClientDelegate> clientProxyMap = new ConcurrentHashMap<>(12);
+    private Map<String, ClientDelegate> pushClientMap = new ConcurrentHashMap<>(12);
     private Map<String, ClientDelegate> imClientMap = new ConcurrentHashMap<>(12);
     private Map<String, ChannelHandlerContext> channelHandlerContextMap = new ConcurrentHashMap<>(12);
+    private AttributeKey<String> attributeKey = AttributeKey.newInstance("regIdentify");
+    private AttributeKey<String> attributeAppKey = AttributeKey.newInstance("regAppIdentify");
 
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, WebSocketFrame frame) throws Exception {
@@ -38,15 +38,22 @@ public class WebSocketFrameHandler extends SimpleChannelInboundHandler<WebSocket
         if (frame instanceof TextWebSocketFrame) {
             String request = ((TextWebSocketFrame) frame).text();
             PushRequest pushRequest = JSONObject.parseObject(request, PushRequest.class);
+            //心跳
+            if (pushRequest.getMsgType() == 3) {
+                TextWebSocketFrame textWebSocketFrame = new TextWebSocketFrame("{\"messageContent\":\"pong\"}");
+                ctx.writeAndFlush(textWebSocketFrame);
+                return;
+            }
             //推送消息
             if (pushRequest.getMsgType() == 0 && pushRequest.getPushType() == 1) {
                 String appKey = pushRequest.getAppKey();
-                if (!clientProxyMap.containsKey(appKey)) {
+                if (!pushClientMap.containsKey(appKey)) {
+                    ctx.channel().attr(attributeAppKey).set(appKey);
                     //注册ws客户端回调
                     ClientDelegate clientDelegate = new ClientDelegate(ctx);
-                    clientProxyMap.put(appKey, clientDelegate);
+                    pushClientMap.put(appKey, clientDelegate);
                 } else {
-                    ClientDelegate clientDelegate = clientProxyMap.get(appKey);
+                    ClientDelegate clientDelegate = pushClientMap.get(appKey);
                     for (Client client : clientDelegate.getClients()) {
                         client.addCallBack(ctx);
                     }
@@ -55,7 +62,7 @@ public class WebSocketFrameHandler extends SimpleChannelInboundHandler<WebSocket
                 regApp.setMsgType(0);
                 regApp.setFromId(appKey);
                 //注册proxy client发送注册路由请求
-                clientProxyMap.get(appKey).sendOnly(regApp);
+                pushClientMap.get(appKey).sendOnly(regApp);
             }
             //IM注册
             else if (pushRequest.getMsgType() == 0 && pushRequest.getPushType() == 2) {
@@ -64,11 +71,12 @@ public class WebSocketFrameHandler extends SimpleChannelInboundHandler<WebSocket
                     if (!channelHandlerContextMap.containsKey(fromId)) {
                         //注册ws客户端回调
                         ClientDelegate clientDelegate = new ClientDelegate(ctx);
+                        ctx.channel().attr(attributeKey).set(fromId);
                         channelHandlerContextMap.put(fromId, ctx);
                         PushRequest regApp = new PushRequest();
                         regApp.setMsgType(0);
                         regApp.setFromId(fromId);
-                        imClientMap.put(fromId,clientDelegate);
+                        imClientMap.put(fromId, clientDelegate);
                         //注册proxy client发送注册路由请求
                         clientDelegate.sendOnly(regApp);
                     }
@@ -87,10 +95,34 @@ public class WebSocketFrameHandler extends SimpleChannelInboundHandler<WebSocket
     }
 
     @Override
+    public void channelInactive(ChannelHandlerContext ctx) throws Exception {
+        super.channelInactive(ctx);
+        //关闭ws连接
+        ctx.close();
+        //IM卸载
+        if (channelHandlerContextMap.values().contains(ctx)) {
+            //卸载ws路由
+            channelHandlerContextMap.values().remove(ctx);
+            String regId = ctx.channel().attr(attributeKey).get();
+            //卸载ws回调
+            imClientMap.get(regId).removeImCallBackChannel(ctx);
+            //卸载代理连接
+            imClientMap.remove(regId);
+            return;
+        }
+        //推送卸载
+        String appKey = ctx.channel().attr(attributeAppKey).get();
+        if (appKey != null && pushClientMap.containsKey(appKey)) {
+            pushClientMap.get(appKey).removeAppCallBackChannel(ctx);
+            pushClientMap.remove(appKey);
+        }
+    }
+
+
+    @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
         LOGGER.error("", cause);
+        //关闭ws连接
         ctx.close();
-        if (channelHandlerContextMap.values().contains(ctx))
-            channelHandlerContextMap.values().remove(ctx);
     }
 }
