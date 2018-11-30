@@ -21,12 +21,12 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
-public class Client extends SimpleChannelInboundHandler<PushResponse> {
+public class Connector extends SimpleChannelInboundHandler<PushResponse> {
 
     private Channel channel;
     private final Map<String, SendFuture> SEND_FUTURE_MAP = new ConcurrentHashMap<>();
     private final long MAX_WAIT = 10 * 1000;
-    private final Logger LOGGER = LoggerFactory.getLogger(Client.class);
+    private final Logger LOGGER = LoggerFactory.getLogger(Connector.class);
     private String host;
     private int port;
     private List<ChannelHandlerContext> destChannels = new CopyOnWriteArrayList<>();
@@ -58,7 +58,7 @@ public class Client extends SimpleChannelInboundHandler<PushResponse> {
                 channel.pipeline()
                         .addLast(new PushEncoder(PushRequest.class))
                         .addLast(new PushDecoder(PushResponse.class))
-                        .addLast(Client.this);
+                        .addLast(Connector.this);
             }
         }).option(ChannelOption.TCP_NODELAY, true);
         try {

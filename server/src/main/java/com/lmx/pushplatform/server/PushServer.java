@@ -15,18 +15,18 @@ import io.netty.channel.socket.nio.NioServerSocketChannel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class Server {
+public class PushServer {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(Server.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(PushServer.class);
     private EventLoopGroup bossGroup = new NioEventLoopGroup();
     private EventLoopGroup workerGroup = new NioEventLoopGroup(Runtime.getRuntime().availableProcessors() * 2);
     public static String host = System.getProperty("host");
     public static String port = System.getProperty("port");
 
-    public Server(String serverAddress, int port) throws Exception {
+    public PushServer(String serverAddress, int port) throws Exception {
 
         ServerBootstrap bootstrap = new ServerBootstrap();
-        final ServerHandler serverHandler = new ServerHandler();
+        final PushServerHandler serverHandler = new PushServerHandler();
         bootstrap.group(bossGroup, workerGroup).channel(NioServerSocketChannel.class)
                 .childHandler(new ChannelInitializer<SocketChannel>() {
                     @Override
@@ -49,10 +49,10 @@ public class Server {
     }
 
     public static void main(String[] args) {
-        Server server = null;
+        PushServer server = null;
         try {
-            Registy.exposeApp();
-            server = new Server(host, Integer.parseInt(port));
+            ServiceRegister.exposeApp();
+            server = new PushServer(host, Integer.parseInt(port));
         } catch (Exception e) {
             LOGGER.error("", e);
             if (server != null)

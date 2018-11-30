@@ -11,27 +11,27 @@ import org.slf4j.LoggerFactory;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ClientDelegate {
-    private Subscriber subScriber = new Subscriber();
-    private List<Client> clients = new ArrayList<>();
-    private final Logger LOGGER = LoggerFactory.getLogger(ClientDelegate.class);
+public class DynamicConnector {
+    private ServiceSubscriber subscriber = ServiceSubscriber.getServiceSubscriber();
+    private List<Connector> clients = new ArrayList<>();
+    private final Logger LOGGER = LoggerFactory.getLogger(DynamicConnector.class);
 
-    public ClientDelegate() {
+    public DynamicConnector() {
         try {
             InnerEventBus.reg(this);
             LOGGER.info("subscribe pushService thread started");
-            subScriber.subScribeApp();
+            subscriber.subScribeApp();
             initConnect();
         } catch (Exception e) {
             LOGGER.error("", e);
         }
     }
 
-    public ClientDelegate(ChannelHandlerContext channelHandlerContext) {
+    public DynamicConnector(ChannelHandlerContext channelHandlerContext) {
         try {
             InnerEventBus.reg(this);
             LOGGER.info("subscribe pushService thread started");
-            subScriber.subScribeApp();
+            subscriber.subScribeApp();
             initConnect(channelHandlerContext);
         } catch (Exception e) {
             LOGGER.error("", e);
@@ -39,10 +39,10 @@ public class ClientDelegate {
     }
 
     public void initConnect(ChannelHandlerContext channelHandlerContext) {
-        List<String> hosts = subScriber.getServiceAddress();
+        List<String> hosts = subscriber.getServiceAddress();
         for (int i = 0; i < hosts.size(); i++) {
             String hostAddress = hosts.get(i);
-            Client client = new Client();
+            Connector client = new Connector();
             client.initConn(HostAndPort.fromString(hostAddress).getHostText(),
                     HostAndPort.fromString(hostAddress).getPort(), channelHandlerContext);
             clients.add(client);
@@ -50,10 +50,10 @@ public class ClientDelegate {
     }
 
     public void initConnect() {
-        List<String> hosts = subScriber.getServiceAddress();
+        List<String> hosts = subscriber.getServiceAddress();
         for (int i = 0; i < hosts.size(); i++) {
             String hostAddress = hosts.get(i);
-            Client client = new Client();
+            Connector client = new Connector();
             client.initConn(HostAndPort.fromString(hostAddress).getHostText(),
                     HostAndPort.fromString(hostAddress).getPort());
             clients.add(client);
@@ -65,7 +65,7 @@ public class ClientDelegate {
         LOGGER.info("subscriber refresh client connector address={}", hosts);
         clients.clear();
         for (String hostAddress : hosts) {
-            Client client = new Client();
+            Connector client = new Connector();
             client.initConn(HostAndPort.fromString(hostAddress).getHostText(),
                     HostAndPort.fromString(hostAddress).getPort());
             clients.add(client);
@@ -101,19 +101,19 @@ public class ClientDelegate {
         return clients.size() > 0;
     }
 
-    public List<Client> getClients() {
+    public List<Connector> getClients() {
         return clients;
     }
 
     public synchronized void removeImCallBackChannel(ChannelHandlerContext channelHandlerContext) {
-        for (Client c : clients) {
+        for (Connector c : clients) {
             c.getCallBackClients().remove(channelHandlerContext);
             c.close();
         }
     }
 
     public synchronized void removeAppCallBackChannel(ChannelHandlerContext channelHandlerContext) {
-        for (Client c : clients) {
+        for (Connector c : clients) {
             c.getCallBackClients().remove(channelHandlerContext);
             if (c.getCallBackClients().size() == 0) {
                 c.close();

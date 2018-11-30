@@ -1,18 +1,21 @@
 import com.google.common.collect.Lists;
-import com.lmx.pushplatform.client.ClientDelegate;
+import com.lmx.pushplatform.client.DynamicConnector;
 import com.lmx.pushplatform.proto.PushRequest;
 import org.junit.Test;
 
 public class ClientTest {
-    private ClientDelegate clientDelegate = new ClientDelegate();
+    private DynamicConnector dynamicConnector = new DynamicConnector();
+    private String appName = "stockApp";
 
     @Test
     public void clientATest() {
         try {
-            PushRequest pushRequest = new PushRequest();
-            pushRequest.setMsgType(0);
-            pushRequest.setFromId("15821303235");
-            clientDelegate.sendOnly(pushRequest);
+            PushRequest reg = new PushRequest();
+            reg.setMsgType(PushRequest.MessageType.REGISTY.ordinal());
+            reg.setPushType(PushRequest.PushType.PUSH.ordinal());
+            reg.setFromId("15821303235");
+            reg.setAppKey(appName);
+            dynamicConnector.sendOnly(reg);
             Thread.sleep(Integer.MAX_VALUE);
         } catch (Exception e) {
             e.printStackTrace();
@@ -22,17 +25,21 @@ public class ClientTest {
     @Test
     public void clientBTest() {
         try {
-            PushRequest pushRequest = new PushRequest();
-            pushRequest.setMsgType(0);
-            pushRequest.setFromId("13120615313");
-            clientDelegate.sendOnly(pushRequest);
+            PushRequest reg = new PushRequest();
+            reg.setMsgType(PushRequest.MessageType.REGISTY.ordinal());
+            reg.setPushType(PushRequest.PushType.PUSH.ordinal());
+            reg.setFromId("13120615313");
+            reg.setAppKey(appName);
+            dynamicConnector.sendOnly(reg);
 
-            PushRequest pushRequest_ = new PushRequest();
-            pushRequest_.setMsgType(1);
-            pushRequest_.setFromId("13120615313");
-            pushRequest_.setToId(Lists.newArrayList("15821303235"));
-            pushRequest_.setMsgContent("this is a push message");
-            clientDelegate.sendAndGet(pushRequest_);
+            PushRequest pub = new PushRequest();
+            pub.setMsgType(PushRequest.MessageType.DILIVERY_MSG.ordinal());
+            pub.setPushType(PushRequest.PushType.PUSH.ordinal());
+            pub.setFromId("13120615313");
+            pub.setToId(Lists.newArrayList("15821303235"));
+            pub.setMsgContent("this is a push message");
+            pub.setAppKey(appName);
+            dynamicConnector.sendAndGet(pub);
         } catch (Exception e) {
             e.printStackTrace();
         }

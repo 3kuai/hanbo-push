@@ -1,9 +1,11 @@
 package com.lmx.pushplatform.webproxy;
 
+import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
-import com.lmx.pushplatform.client.Client;
-import com.lmx.pushplatform.client.ClientDelegate;
+import com.lmx.pushplatform.client.Connector;
+import com.lmx.pushplatform.client.DynamicConnector;
 import com.lmx.pushplatform.proto.PushRequest;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
@@ -21,8 +23,8 @@ import java.util.concurrent.ConcurrentHashMap;
 public class WebSocketFrameHandler extends SimpleChannelInboundHandler<WebSocketFrame> {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(WebSocketFrameHandler.class);
-    private Map<String, ClientDelegate> pushClientMap = new ConcurrentHashMap<>(12);
-    private Map<String, ClientDelegate> imClientMap = new ConcurrentHashMap<>(12);
+    private Map<String, DynamicConnector> pushClientMap = new ConcurrentHashMap<>(12);
+    private Map<String, DynamicConnector> imClientMap = new ConcurrentHashMap<>(12);
     private Map<String, ChannelHandlerContext> channelHandlerContextMap = new ConcurrentHashMap<>(12);
     private AttributeKey<String> attributeKey = AttributeKey.newInstance("regIdentify");
     private AttributeKey<String> attributeAppKey = AttributeKey.newInstance("regAppIdentify");
@@ -40,7 +42,7 @@ public class WebSocketFrameHandler extends SimpleChannelInboundHandler<WebSocket
             PushRequest pushRequest = JSONObject.parseObject(request, PushRequest.class);
             //心跳
             if (pushRequest.getMsgType() == 3) {
-                TextWebSocketFrame textWebSocketFrame = new TextWebSocketFrame("{\"messageContent\":\"pong\"}");
+                TextWebSocketFrame textWebSocketFrame = new TextWebSocketFrame("{\"msgContent\":\"pong\",\"msgType\":3}");
                 ctx.writeAndFlush(textWebSocketFrame);
                 return;
             }
@@ -50,11 +52,11 @@ public class WebSocketFrameHandler extends SimpleChannelInboundHandler<WebSocket
                 if (!pushClientMap.containsKey(appKey)) {
                     ctx.channel().attr(attributeAppKey).set(appKey);
                     //注册ws客户端回调
-                    ClientDelegate clientDelegate = new ClientDelegate(ctx);
+                    DynamicConnector clientDelegate = new DynamicConnector(ctx);
                     pushClientMap.put(appKey, clientDelegate);
                 } else {
-                    ClientDelegate clientDelegate = pushClientMap.get(appKey);
-                    for (Client client : clientDelegate.getClients()) {
+                    DynamicConnector clientDelegate = pushClientMap.get(appKey);
+                    for (Connector client : clientDelegate.getClients()) {
                         client.addCallBack(ctx);
                     }
                 }
@@ -70,26 +72,21 @@ public class WebSocketFrameHandler extends SimpleChannelInboundHandler<WebSocket
                     String fromId = pushRequest.getFromId();
                     if (!channelHandlerContextMap.containsKey(fromId)) {
                         //注册ws客户端回调
-                        ClientDelegate clientDelegate = new ClientDelegate(ctx);
+                        DynamicConnector clientDelegate = new DynamicConnector(ctx);
                         ctx.channel().attr(attributeKey).set(fromId);
                         channelHandlerContextMap.put(fromId, ctx);
-                        PushRequest regApp = new PushRequest();
-                        regApp.setMsgType(0);
-                        regApp.setFromId(fromId);
                         imClientMap.put(fromId, clientDelegate);
                         //注册proxy client发送注册路由请求
-                        clientDelegate.sendOnly(regApp);
+                        clientDelegate.sendOnly(pushRequest);
                     }
+                    TextWebSocketFrame textWebSocketFrame = new TextWebSocketFrame(JSONArray.toJSONString(imClientMap.keySet()));
+                    ctx.writeAndFlush(textWebSocketFrame);
                 }
             }
             //IM消息
             else if (pushRequest.getMsgType() == 1 && pushRequest.getPushType() == 2) {
-                PushRequest imMsg = new PushRequest();
-                imMsg.setMsgType(pushRequest.getMsgType());
-                imMsg.setMsgContent(pushRequest.getMsgContent());
-                String toID = pushRequest.getToId().remove(0);
-                imMsg.setToId(Lists.newArrayList(toID));
-                imClientMap.get(toID).sendOnly(imMsg);
+                String toID = pushRequest.getToId().get(0);
+                imClientMap.get(toID).sendOnly(pushRequest);
             }
         }
     }

@@ -10,7 +10,7 @@ import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
 
-public class RouterClient extends SimpleChannelInboundHandler<PushResponse> {
+public class ForwardClient extends SimpleChannelInboundHandler<PushResponse> {
 
     private Channel channel;
 
@@ -23,7 +23,7 @@ public class RouterClient extends SimpleChannelInboundHandler<PushResponse> {
                 channel.pipeline()
                         .addLast(new PushEncoder(PushRequest.class))
                         .addLast(new PushDecoder(PushResponse.class))
-                        .addLast(RouterClient.this);
+                        .addLast(ForwardClient.this);
             }
         }).option(ChannelOption.TCP_NODELAY, true);
         try {

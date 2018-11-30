@@ -12,7 +12,7 @@ import redis.clients.jedis.JedisPoolConfig;
  * Created by Administrator on 2018/11/29.
  */
 public class RouterManager {
-    private static Jedis jedis;
+    private static JedisPool jedisPool;
     private static final String SPLITTER = ":";
     private static final String PUSH_KEY_PREFIX = "push" + SPLITTER + "user" + SPLITTER;
     private static final String IM_KEY_PREFIX = "im" + SPLITTER + "user" + SPLITTER;
@@ -20,9 +20,8 @@ public class RouterManager {
 
     static {
         try {
-            jedis = new Jedis();
-            jedis.setDataSource(new JedisPool(new JedisPoolConfig(),
-                    System.getProperty("redis.host"), Integer.parseInt(System.getProperty("redis.port"))));
+            jedisPool = new JedisPool(new JedisPoolConfig(),
+                    System.getProperty("redis.host"), Integer.parseInt(System.getProperty("redis.port")));
         } catch (Exception e) {
             LOGGER.error("", e);
             System.exit(0);
@@ -31,15 +30,10 @@ public class RouterManager {
 
     public static String regRouter(PushRequest request) {
         String regId = request.getFromId();
-        String realRegId = null;
-        //推送
-        if (request.getPushType() == PushRequest.PushType.PUSH.ordinal()) {
-            realRegId = request.getAppKey() + SPLITTER + PUSH_KEY_PREFIX + regId;
-        }//IM
-        else if (request.getPushType() == PushRequest.PushType.IM.ordinal()) {
-            realRegId = request.getAppKey() + SPLITTER + IM_KEY_PREFIX + regId;
-        }
-        jedis.set(realRegId, Server.host + SPLITTER + Server.port);
+        String realRegId = getLocalRouter(request, regId);
+        Jedis jedis = jedisPool.getResource();
+        jedis.set(realRegId, PushServer.host + SPLITTER + PushServer.port);
+        jedis.close();
         return realRegId;
     }
 
@@ -56,10 +50,22 @@ public class RouterManager {
     }
 
     public static String getRedisRouter(PushRequest request, String toId) {
-        return jedis.get(getLocalRouter(request,toId));
+        Jedis jedis = null;
+        try {
+            jedis = jedisPool.getResource();
+            return jedis.get(getLocalRouter(request, toId));
+        } finally {
+            jedis.close();
+        }
     }
 
     public static void removeRedisRouter(String id) {
-        jedis.del(id);
+        Jedis jedis = null;
+        try {
+            jedis = jedisPool.getResource();
+            jedis.del(id);
+        } finally {
+            jedis.close();
+        }
     }
 }

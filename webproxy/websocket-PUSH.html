@@ -3,14 +3,8 @@
 <body>
 <form onsubmit="return false;">
 
-    <input type="text" name="message" value="请输入手机号"/>
-    <input type="button" value="进入聊天室"
-           onclick="send(this.form.message.value,0)"/>
-    <select id="destId">
-    </select>
-    <input name="reqText" type="text"/>
-    <input type="button" value="发送消息"
-           onclick="send(this.form.reqText.value,1)"/>
+    <input type="button" value="注册推送"
+           onclick="send()"/>
     <input type="button" value="关闭聊天"
            onclick="socket.close()"/>
     <h3>Output</h3>
@@ -53,24 +47,7 @@
 
         socket.onmessage = function (event) {
             var ta = document.getElementById('responseText');
-            var resp = JSON.parse(event.data);
-            if (resp.fromId)
-                ta.value = ta.value + '\n' + resp.fromId + "say: \n" + resp.msgContent + "\n";
-            else {
-                if (resp instanceof Array) {
-                    if (resp) {
-                        $("#destId").empty();
-                        for (idx in resp) {
-                            var node = "<option value=\"" + resp[idx] + "\">" + resp[idx] + "</option>";
-                            $("#destId").append(node);
-                        }
-                    }
-                } else {
-                    if (resp.pushType && resp.pushType != 3) {
-                        ta.value = ta.value + '\n' + event.data;
-                    }
-                }
-            }
+            ta.value = ta.value + '\n' + event.data;
             h_resp = event.data;
         };
         socket.onopen = function (event) {
@@ -85,23 +62,13 @@
     } else {
         alert("Your browser does not support Web Socket.");
     }
-    var curUser;
-    function send(message, type, dest) {
+    function send() {
         if (!window.WebSocket) {
             return;
         }
         if (socket.readyState == WebSocket.OPEN) {
             var reg;
-            if (type == 0)
-                reg = {"msgType": 0, "fromId": curUser = message, "pushType": 2, "appName": "testApp"};
-            else {
-                reg = {
-                    "msgType": 1, "fromId": curUser, "toId": [document.getElementById("destId").value], "pushType": 2,
-                    "appName": "testApp", "msgContent": message
-                };
-                var ta = document.getElementById('responseText');
-                ta.value = ta.value + '\n' + curUser + "say: \n" + message + "\n";
-            }
+            reg = {"msgType": 0, "fromId": "android001", "pushType": 1, "appKey": "c8b1a74c11784fceb53d65f37c63439f"};
             socket.send(JSON.stringify(reg));
         } else {
             alert("The socket is not open.");

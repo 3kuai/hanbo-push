@@ -15,17 +15,17 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 @ChannelHandler.Sharable
-public class ServerHandler extends SimpleChannelInboundHandler<PushRequest> {
+public class PushServerHandler extends SimpleChannelInboundHandler<PushRequest> {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(ServerHandler.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(PushServerHandler.class);
     /**
      * 本地路由表
      */
     private Map<String, ChannelHandlerContext> channelHandlerContextMap = new ConcurrentHashMap<>(12);
     private AttributeKey<String> attributeKey = AttributeKey.newInstance("regIdentify");
-    private Map<String, RouterClient> clientMap = new ConcurrentHashMap<>(2);
+    private Map<String, ForwardClient> clientMap = new ConcurrentHashMap<>(2);
 
-    public ServerHandler() {
+    public PushServerHandler() {
     }
 
     @Override
@@ -57,6 +57,10 @@ public class ServerHandler extends SimpleChannelInboundHandler<PushRequest> {
                     String pushToId = RouterManager.getLocalRouter(request, toId);
                     if (channelHandlerContextMap.containsKey(pushToId)) {
                         PushResponse pushResponse = new PushResponse(request.getMsgContent());
+                        pushResponse.setAppKey(request.getAppKey());
+                        pushResponse.setFromId(request.getFromId());
+                        pushResponse.setToId(request.getToId());
+                        pushResponse.setMsgType(request.getMsgType());
                         LOGGER.info("send dest response is {}", pushResponse);
                         channelHandlerContextMap.get(pushToId).writeAndFlush(pushResponse);
                     } else {
@@ -68,7 +72,7 @@ public class ServerHandler extends SimpleChannelInboundHandler<PushRequest> {
                             return;
                         }
                         if (!clientMap.containsKey(hostAddress)) {
-                            RouterClient client = new RouterClient();
+                            ForwardClient client = new ForwardClient();
                             client.initConn(HostAndPort.fromHost(hostAddress).getHostText(),
                                     HostAndPort.fromString(hostAddress).getPort());
                             client.send(request);
@@ -77,6 +81,7 @@ public class ServerHandler extends SimpleChannelInboundHandler<PushRequest> {
                             try {
                                 clientMap.get(hostAddress).send(request);
                             } catch (Exception e) {
+                                LOGGER.error("", e);
                                 clientMap.remove(hostAddress);
                                 throw e;
                             }
@@ -95,6 +100,10 @@ public class ServerHandler extends SimpleChannelInboundHandler<PushRequest> {
                 for (String toId : request.getToId()) {
                     String pushToId = RouterManager.getLocalRouter(request, toId);
                     PushResponse pushResponse = new PushResponse(request.getMsgContent());
+                    pushResponse.setAppKey(request.getAppKey());
+                    pushResponse.setFromId(request.getFromId());
+                    pushResponse.setToId(request.getToId());
+                    pushResponse.setMsgType(request.getMsgType());
                     LOGGER.info("router response is {}", pushResponse);
                     channelHandlerContextMap.get(pushToId).writeAndFlush(pushResponse);
                 }
@@ -105,6 +114,7 @@ public class ServerHandler extends SimpleChannelInboundHandler<PushRequest> {
     @Override
     public void channelInactive(ChannelHandlerContext ctx) throws Exception {
         super.channelInactive(ctx);
+        LOGGER.info("disconnect channel {}", ctx.channel());
         close(ctx);
     }
 
