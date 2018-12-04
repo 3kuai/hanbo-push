@@ -43,7 +43,7 @@ public class PushServerHandler extends SimpleChannelInboundHandler<PushRequest> 
                 for (String toId : request.getToId()) {
                     //ios推送走apns
                     if (request.getPlatform() == PushRequest.Platform.IOS.ordinal()) {
-                        ApnsPushHelper.sendMsg(toId, "", request.getMsgContent());
+                        IosPushHelper.sendMsg(toId, "", request.getMsgContent());
                     } else {
                         AndroidPushHelper.sendMsg(request, toId);
                     }
@@ -65,10 +65,16 @@ public class PushServerHandler extends SimpleChannelInboundHandler<PushRequest> 
     }
 
     @Override
+    public void channelActive(ChannelHandlerContext ctx) throws Exception {
+        super.channelActive(ctx);
+        LOGGER.info("connected channel={}", ctx.channel());
+    }
+
+    @Override
     public void channelInactive(ChannelHandlerContext ctx) throws Exception {
         super.channelInactive(ctx);
-        LOGGER.info("disconnect channel {}", ctx.channel());
-        AndroidPushHelper.unRegChannel(ctx);
+        LOGGER.info("disconnect channel={}", ctx.channel());
+        ctx.close();
     }
 
     @Override

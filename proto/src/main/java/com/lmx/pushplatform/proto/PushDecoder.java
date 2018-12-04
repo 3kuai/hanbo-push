@@ -20,6 +20,8 @@ public class PushDecoder extends ReplayingDecoder {
     @Override
     public final void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) throws Exception {
         int dataLength = in.readInt();
+        if (dataLength > 1024 * 1024 * 2)
+            return;
         byte[] data = new byte[dataLength];
         in.readBytes(data);
         Object obj = SerializationUtil.deserialize(data, genericClass);

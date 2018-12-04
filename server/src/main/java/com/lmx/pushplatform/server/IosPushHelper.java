@@ -17,16 +17,18 @@ import java.io.IOException;
 /**
  * IOS push
  */
-public class ApnsPushHelper {
-    private static Logger LOGGER = LoggerFactory.getLogger(ApnsPushHelper.class);
+public class IosPushHelper {
+    private static Logger LOGGER = LoggerFactory.getLogger(IosPushHelper.class);
 
     private static ApnsClient apnsClient;
+    private static String iosCertFilePath = System.getProperty("ios.certFilePath");
+    private static String iosCertPwd = System.getProperty("ios.certPwd");
 
     static {
         try {
             apnsClient = new ApnsClientBuilder()
                     .setApnsServer(ApnsClientBuilder.DEVELOPMENT_APNS_HOST)
-                    .setClientCredentials(new File("/data/certificate/c.p12"), "p12-file-password")
+                    .setClientCredentials(new File(iosCertFilePath), iosCertPwd)
                     .build();
         } catch (IOException e) {
             LOGGER.error("", e);

@@ -25,7 +25,7 @@ public class Connector extends SimpleChannelInboundHandler<PushResponse> {
 
     private Channel channel;
     private final Map<String, SendFuture> SEND_FUTURE_MAP = new ConcurrentHashMap<>();
-    private final long MAX_WAIT = 10 * 1000;
+    private final long MAX_WAIT = 60 * 1000;
     private final Logger LOGGER = LoggerFactory.getLogger(Connector.class);
     private String host;
     private int port;
@@ -60,7 +60,9 @@ public class Connector extends SimpleChannelInboundHandler<PushResponse> {
                         .addLast(new PushDecoder(PushResponse.class))
                         .addLast(Connector.this);
             }
-        }).option(ChannelOption.TCP_NODELAY, true);
+        }).option(ChannelOption.SO_SNDBUF, 2048)
+                .option(ChannelOption.SO_SNDBUF, 2048)
+                .option(ChannelOption.TCP_NODELAY, true);
         try {
             this.host = host;
             this.port = port;

@@ -21,7 +21,7 @@ public class AndroidPushHelper {
      */
     private static Map<String, ChannelHandlerContext> channelHandlerContextMap = new ConcurrentHashMap<>(12);
     private static AttributeKey<String> attributeKey = AttributeKey.newInstance("regIdentify");
-    private static Map<String, ForwardClient> clientMap = new ConcurrentHashMap<>(2);
+    private static Map<String, ForwardClient> clientMap = new ConcurrentHashMap<>(12);
     private static Logger LOGGER = LoggerFactory.getLogger(AndroidPushHelper.class);
 
     public static void regChannel(ChannelHandlerContext ctx, PushRequest request) {
@@ -70,7 +70,7 @@ public class AndroidPushHelper {
 
     public static void routerSendForward(PushRequest request, String toId) {
         if (request.getPlatform() == PushRequest.Platform.IOS.ordinal()) {
-            ApnsPushHelper.sendMsg(toId, "", request.getMsgContent());
+            IosPushHelper.sendMsg(toId, "", request.getMsgContent());
         } else {
             String pushToId = RouterManager.getLocalRouter(request, toId);
             PushResponse pushResponse = new PushResponse(request.getMsgContent());
@@ -91,6 +91,7 @@ public class AndroidPushHelper {
     public static void unRegChannel(ChannelHandlerContext ctx) {
         ctx.close();
         String id = ctx.channel().attr(attributeKey).get();
+        LOGGER.info("unRegChannel userId ={}", id);
         if (id != null) {
             RouterManager.removeRedisRouter(id);
             channelHandlerContextMap.remove(id);

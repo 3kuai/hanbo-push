@@ -36,7 +36,11 @@ public class PushServer {
                                 .addLast(new PushEncoder(PushResponse.class))
                                 .addLast(serverHandler);
                     }
-                }).option(ChannelOption.SO_BACKLOG, 128).childOption(ChannelOption.TCP_NODELAY, true);
+                })
+                .option(ChannelOption.SO_BACKLOG, 128)
+                .option(ChannelOption.SO_SNDBUF, 2048)
+                .option(ChannelOption.SO_SNDBUF, 2048)
+                .childOption(ChannelOption.TCP_NODELAY, true);
 
         ChannelFuture future = bootstrap.bind(serverAddress, port).sync();
         LOGGER.info("push-server started on port {}", port);
