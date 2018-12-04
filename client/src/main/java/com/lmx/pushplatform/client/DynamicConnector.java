@@ -1,5 +1,6 @@
 package com.lmx.pushplatform.client;
 
+import com.google.common.eventbus.AllowConcurrentEvents;
 import com.google.common.eventbus.Subscribe;
 import com.google.common.net.HostAndPort;
 import com.lmx.pushplatform.proto.PushRequest;
@@ -61,6 +62,7 @@ public class DynamicConnector {
     }
 
     @Subscribe
+    @AllowConcurrentEvents
     public synchronized void eventHandler(List<String> hosts) {
         LOGGER.info("subscriber refresh client connector address={}", hosts);
         clients.clear();
@@ -76,11 +78,13 @@ public class DynamicConnector {
         if (!hasClients())
             return;
         int val = (int) System.currentTimeMillis() % clients.size();
+        Connector connector = null;
         try {
-            clients.get(val).sendOnly(pushRequest);
+            connector = clients.get(val);
+            connector.sendOnly(pushRequest);
         } catch (Exception e) {
             LOGGER.error("", e);
-            clients.remove(val);
+            clients.remove(connector);
         }
     }
 
@@ -88,11 +92,13 @@ public class DynamicConnector {
         if (!hasClients())
             return null;
         int val = (int) System.currentTimeMillis() % clients.size();
+        Connector connector = null;
         try {
-            return clients.get(val).sendAndGet(pushRequest);
+            connector = clients.get(val);
+            return connector.sendAndGet(pushRequest);
         } catch (Exception e) {
             LOGGER.error("", e);
-            clients.remove(val);
+            clients.remove(connector);
             return null;
         }
     }
