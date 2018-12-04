@@ -12,19 +12,20 @@ public class PushRequest {
     private List<String> toId;
     private String msgContent;
     private String appKey;
+    private String topic;//ios推送必传
     private static final AtomicInteger atomicInteger = new AtomicInteger(1);
 
     public enum Platform {
-        ANDROID, IOS, WEB, ALL
+        NULL, ANDROID, IOS, WEB, ALL
     }
 
     public enum PushType {
-        NULL, PUSH, IM;
+        NULL, PUSH, IM
 
     }
 
     public enum MessageType {
-        REGISTY, DILIVERY_MSG, ROUTER_FORWAR, HEARTBEAT,NIL;
+        REGISTY, DILIVERY_MSG, ROUTER_FORWARD, HEARTBEAT, NIL;
 
         public static MessageType getMessageType(int type) {
             switch (type) {
@@ -33,7 +34,7 @@ public class PushRequest {
                 case 1:
                     return DILIVERY_MSG;
                 case 2:
-                    return ROUTER_FORWAR;
+                    return ROUTER_FORWARD;
                 case 3:
                     return HEARTBEAT;
                 default:
@@ -126,5 +127,13 @@ public class PushRequest {
 
     public static AtomicInteger getAtomicInteger() {
         return atomicInteger;
+    }
+
+    public String getTopic() {
+        return topic;
+    }
+
+    public void setTopic(String topic) {
+        this.topic = topic;
     }
 }
