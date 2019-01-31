@@ -11,7 +11,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.lmx.pushplatform</groupId>
-    <artifactId>admin</artifactId>
+    <artifactId>push-admin</artifactId>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>

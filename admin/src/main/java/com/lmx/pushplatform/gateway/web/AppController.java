@@ -1,7 +1,7 @@
 package com.lmx.pushplatform.gateway.web;
 
-import com.lmx.pushplatform.client.Client;
-import com.lmx.pushplatform.client.ClientDelegate;
+import com.lmx.pushplatform.client.Connector;
+import com.lmx.pushplatform.client.DynamicConnector;
 import com.lmx.pushplatform.gateway.api.CommonResp;
 import com.lmx.pushplatform.gateway.api.MobileRegReq;
 import com.lmx.pushplatform.gateway.api.MobileRegResp;
@@ -22,7 +22,7 @@ public class AppController {
     @Autowired
     private AppRep appRep;
     @Autowired
-    private ClientDelegate clientDelegate;
+    private DynamicConnector clientDelegate;
     @Autowired
     private RedisTemplate redisTemplate;
 
@@ -64,7 +64,7 @@ public class AppController {
         if (appEntity == null) {
             return CommonResp.defaultError("9996", "您无权访问，请检查密钥");
         }
-        List<Client> clients = clientDelegate.getClients();
+        List<Connector> clients = clientDelegate.getClients();
         if (CollectionUtils.isEmpty(clients)) {
             return CommonResp.defaultError("9997", "无可用连接");
         }

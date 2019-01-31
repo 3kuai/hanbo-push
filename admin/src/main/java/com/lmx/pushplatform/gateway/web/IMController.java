@@ -1,7 +1,7 @@
 package com.lmx.pushplatform.gateway.web;
 
 import com.google.common.collect.Lists;
-import com.lmx.pushplatform.client.ClientDelegate;
+import com.lmx.pushplatform.client.DynamicConnector;
 import com.lmx.pushplatform.gateway.api.CommonResp;
 import com.lmx.pushplatform.gateway.api.GroupIMReq;
 import com.lmx.pushplatform.gateway.api.P2pIMReq;
@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/im")
 public class IMController {
     @Autowired
-    private ClientDelegate clientDelegate;
+    private DynamicConnector clientDelegate;
     @Autowired
     private CommonService commonService;
 

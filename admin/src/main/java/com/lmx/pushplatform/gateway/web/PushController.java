@@ -2,7 +2,7 @@ package com.lmx.pushplatform.gateway.web;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-import com.lmx.pushplatform.client.ClientDelegate;
+import com.lmx.pushplatform.client.DynamicConnector;
 import com.lmx.pushplatform.gateway.api.CommonResp;
 import com.lmx.pushplatform.gateway.api.PushReq;
 import com.lmx.pushplatform.gateway.dao.AppRep;
@@ -25,7 +25,7 @@ import java.util.Set;
 @RequestMapping("/push")
 public class PushController {
     @Autowired
-    private ClientDelegate clientDelegate;
+    private DynamicConnector clientDelegate;
     @Autowired
     private AppRep appRep;
     @Autowired

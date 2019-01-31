@@ -13,6 +13,7 @@
         <module>server</module>
         <module>proto</module>
         <module>webproxy</module>
+        <module>admin</module>
     </modules>
 
     <properties>

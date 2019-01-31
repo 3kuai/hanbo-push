@@ -1,6 +1,6 @@
 package com.lmx.pushplatform.gateway.web;
 
-import com.lmx.pushplatform.client.ClientDelegate;
+import com.lmx.pushplatform.client.DynamicConnector;
 import com.lmx.pushplatform.gateway.api.CommonResp;
 import com.lmx.pushplatform.gateway.api.DeviceRegReq;
 import com.lmx.pushplatform.gateway.dao.DeviceRep;
@@ -18,7 +18,7 @@ public class DeviceController {
     @Autowired
     private DeviceRep deviceRep;
     @Autowired
-    private ClientDelegate clientDelegate;
+    private DynamicConnector dynamicConnector;
 
     /**
      * 注册设备
