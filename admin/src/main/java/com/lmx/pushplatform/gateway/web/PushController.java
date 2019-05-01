@@ -12,6 +12,7 @@ import com.lmx.pushplatform.gateway.entity.DeviceEntity;
 import com.lmx.pushplatform.gateway.entity.MessageEntity;
 import com.lmx.pushplatform.gateway.entity.UserEntity;
 import com.lmx.pushplatform.proto.PushRequest;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.CollectionUtils;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -23,6 +24,7 @@ import java.util.Set;
 
 @RestController
 @RequestMapping("/push")
+@Slf4j
 public class PushController {
     @Autowired
     private DynamicConnector clientDelegate;
@@ -76,10 +78,12 @@ public class PushController {
         if (CollectionUtils.isEmpty(sets))
             return CommonResp.defaultSuccess("该appName下没有设备需要推送");
         PushRequest pushRequest = new PushRequest();
-        pushRequest.setMsgType(1);
+        pushRequest.setMsgType(PushRequest.MessageType.DILIVERY_MSG.ordinal());
         pushRequest.setMsgContent(pushReq.getMessageContent());
+        pushRequest.setFromId("admin");
         pushRequest.setToId(Lists.newArrayList(sets));
         pushRequest.setPlatform(pushReq.getPlatform());
+        pushRequest.setAppKey(pushReq.getAppName());
         messageRep.save(MessageEntity.builder()
                 .appId(String.valueOf(appEntity.getId()))
                 .appName(appEntity.getAppName())
@@ -88,6 +92,7 @@ public class PushController {
                 .platform(pushReq.getPlatform())
                 .build());
         clientDelegate.sendOnly(pushRequest);
+        log.info("admin push msg={}",pushRequest);
         return CommonResp.defaultSuccess();
     }
 
