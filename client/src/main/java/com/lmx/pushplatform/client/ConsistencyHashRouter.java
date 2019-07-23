@@ -44,53 +44,42 @@ public class ConsistencyHashRouter {
     public void modifyHashCycle(List<String> nodes) {
         //全部离线
         if (nodes.size() == 0) {
-            for (int i = 0; i < realClientNodes.size(); i++) {
-                String node = realClientNodes.get(i);
-                realClientNodes.remove(node);
-                for (int m = 0; m < realClients.size(); m++) {
-                    if (realClients.get(m).toString().equals(node))
-                        realClients.remove(m);
-                }
-                hashCycle.remove(hash(node));
-                for (int j = 0; j < VIRTUAL_NODE_FACTOR; j++) {
-                    hashCycle.remove(hash(node + "_VIRTUAL_" + j));
-                }
-            }
-        } else
-            //部分离线或者新增
+            dropCritical(realClientNodes);
+        } else if (realClientNodes.size() > nodes.size()) {//剔除故障节点
+            List<String> waitRem = Lists.newArrayList(realClientNodes);
+            waitRem.remove(nodes);
+            dropCritical(waitRem);
+        } else if (realClientNodes.size() < nodes.size()) {//新增节点
             for (int m = 0; m < nodes.size(); m++) {
                 String node = nodes.get(m);
-                //缓存节点大于当前节点，移除离线节点
-                if (realClientNodes.size() > nodes.size()) {
-                    //排除存在节点
-                    List<String> waitRem = Lists.newArrayList(realClientNodes);
-                    waitRem.remove(node);
-                    for (int n = 0; n < waitRem.size(); n++) {
-                        node = waitRem.get(n);
-                        realClientNodes.remove(node);
-                        for (int i = 0; i < realClients.size(); i++) {
-                            if (realClients.get(i).toString().equals(node))
-                                realClients.remove(i);
-                        }
-                        hashCycle.remove(hash(node));
-                        for (int j = 0; j < VIRTUAL_NODE_FACTOR; j++) {
-                            hashCycle.remove(hash(node + "_VIRTUAL_" + j));
-                        }
-                    }
-                } else {//新增上线节点
-                    if (!realClientNodes.contains(node)) {
-                        realClientNodes.add(node);
-                        Connector client = new Connector();
-                        client.initConn(HostAndPort.fromString(node).getHostText(),
-                                HostAndPort.fromString(node).getPort());
-                        realClients.add(client);
-                        hashCycle.put(hash(node), client);
-                        for (int j = 0; j < VIRTUAL_NODE_FACTOR; j++) {
-                            hashCycle.put(hash(node + "_VIRTUAL_" + j), client);
-                        }
+                if (!realClientNodes.contains(node)) {
+                    realClientNodes.add(node);
+                    Connector client = new Connector();
+                    client.initConn(HostAndPort.fromString(node).getHostText(),
+                            HostAndPort.fromString(node).getPort());
+                    realClients.add(client);
+                    hashCycle.put(hash(node), client);
+                    for (int j = 0; j < VIRTUAL_NODE_FACTOR; j++) {
+                        hashCycle.put(hash(node + "_VIRTUAL_" + j), client);
                     }
                 }
             }
+        }
+    }
+
+    void dropCritical(List<String> waitRem) {
+        for (int n = 0; n < waitRem.size(); n++) {
+            String node = waitRem.get(n);
+            realClientNodes.remove(node);
+            for (int i = 0; i < realClients.size(); i++) {
+                if (realClients.get(i).toString().equals(node))
+                    realClients.remove(i);
+            }
+            hashCycle.remove(hash(node));
+            for (int j = 0; j < VIRTUAL_NODE_FACTOR; j++) {
+                hashCycle.remove(hash(node + "_VIRTUAL_" + j));
+            }
+        }
     }
 
     public int hash(String key) {
