@@ -1,8 +1,8 @@
 package com.lmx.pushplatform.gateway.api;
 
 import com.lmx.pushplatform.gateway.entity.AppEntity;
+import lombok.Builder;
 import lombok.Data;
-import lombok.experimental.Builder;
 
 import java.util.Set;
 

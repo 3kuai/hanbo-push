@@ -1,7 +1,6 @@
 package com.lmx.pushplatform.gateway.entity;
 
 import lombok.*;
-import lombok.experimental.Builder;
 
 import javax.persistence.*;
 import java.io.Serializable;

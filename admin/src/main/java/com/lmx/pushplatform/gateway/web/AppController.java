@@ -38,7 +38,7 @@ public class AppController {
                 .developerId(String.valueOf(redisTemplate.opsForValue().get(token)))
                 .appName(mobileRegReq.getAppName())
                 .appKey(UUID.randomUUID().toString().replaceAll("-", ""))
-                .appSecret(UUID.randomUUID().toString().replaceAll("-", "").substring(0, 6).toUpperCase())
+                .appSecret(UUID.randomUUID().toString().replaceAll("-", "").substring(10, 20).toLowerCase())
                 .build();
         appRep.save(appEntity);
         return CommonResp.defaultSuccess(MobileRegResp.builder()
@@ -64,12 +64,10 @@ public class AppController {
         if (appEntity == null) {
             return CommonResp.defaultError("9996", "您无权访问，请检查密钥");
         }
-        List<Connector> clients = clientDelegate.getClients();
-        if (CollectionUtils.isEmpty(clients)) {
+        Connector connector = clientDelegate.getClient(mobileRegReq.getRemoteIp());
+        if (connector == null) {
             return CommonResp.defaultError("9997", "无可用连接");
         }
-        int val = (int) System.currentTimeMillis() % clients.size();
-        String clientInfo = clients.get(Math.abs(val)).toString();
-        return CommonResp.defaultSuccess(clientInfo);
+        return CommonResp.defaultSuccess(connector.toString());
     }
 }

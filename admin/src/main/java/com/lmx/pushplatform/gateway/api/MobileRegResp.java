@@ -1,7 +1,7 @@
 package com.lmx.pushplatform.gateway.api;
 
+import lombok.Builder;
 import lombok.Data;
-import lombok.experimental.Builder;
 
 /**
  * Created by limingxin on 2017/7/5.

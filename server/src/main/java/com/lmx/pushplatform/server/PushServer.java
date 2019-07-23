@@ -5,10 +5,7 @@ import com.lmx.pushplatform.proto.PushEncoder;
 import com.lmx.pushplatform.proto.PushRequest;
 import com.lmx.pushplatform.proto.PushResponse;
 import io.netty.bootstrap.ServerBootstrap;
-import io.netty.channel.ChannelFuture;
-import io.netty.channel.ChannelInitializer;
-import io.netty.channel.ChannelOption;
-import io.netty.channel.EventLoopGroup;
+import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
@@ -37,6 +34,8 @@ public class PushServer {
                                 .addLast(serverHandler);
                     }
                 })
+                .option(ChannelOption.WRITE_BUFFER_WATER_MARK,
+                        new WriteBufferWaterMark(32 * 1024, 64 * 1024))
                 .option(ChannelOption.SO_BACKLOG, 128)
                 .option(ChannelOption.SO_SNDBUF, 2048)
                 .option(ChannelOption.SO_SNDBUF, 2048)

@@ -83,4 +83,8 @@ public class PushServerHandler extends SimpleChannelInboundHandler<PushRequest> 
         AndroidPushHelper.unRegChannel(ctx);
     }
 
+    @Override
+    public void channelWritabilityChanged(ChannelHandlerContext ctx) throws Exception {
+        ctx.channel().isWritable();
+    }
 }

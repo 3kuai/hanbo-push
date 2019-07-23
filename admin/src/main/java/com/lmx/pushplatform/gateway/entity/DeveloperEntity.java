@@ -2,7 +2,6 @@ package com.lmx.pushplatform.gateway.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.*;
-import lombok.experimental.Builder;
 
 import javax.persistence.*;
 import java.io.Serializable;

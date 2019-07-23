@@ -1,9 +1,9 @@
 package com.lmx.pushplatform.gateway.api;
 
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.experimental.Builder;
 
 /**
  * Created by limingxin on 2017/7/5.

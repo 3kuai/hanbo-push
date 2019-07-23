@@ -8,6 +8,6 @@ import lombok.Data;
 @Data
 public class MobileRegReq {
 
-    private String appName,
+    private String remoteIp, appName,
             developer, appKey, appSecret;
 }
