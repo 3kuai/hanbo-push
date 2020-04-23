@@ -44,7 +44,12 @@ public class PushRequest {
     }
 
     public PushRequest() {
-        requestId = String.valueOf(atomicInteger.incrementAndGet());
+        int seq = atomicInteger.incrementAndGet();
+        if (seq < 0) {
+            atomicInteger.set(0);
+            seq = atomicInteger.incrementAndGet();
+        }
+        requestId = String.valueOf(seq);
     }
 
     @Override

@@ -77,6 +77,7 @@ public class Connector extends SimpleChannelInboundHandler<PushResponse> {
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, PushResponse response) throws Exception {
         String seqNo = response.getRequestId();
+        LOGGER.info("receive message={}", response);
         if (seqNo == null) {
             for (ChannelHandlerContext channel : destChannels) {
                 //坏连接则剔除
@@ -87,7 +88,6 @@ public class Connector extends SimpleChannelInboundHandler<PushResponse> {
                 TextWebSocketFrame textWebSocketFrame = new TextWebSocketFrame(JSONObject.toJSONString(response));
                 channel.writeAndFlush(textWebSocketFrame);
             }
-            LOGGER.info("receive message={}", response);
             return;
         }
         SendFuture future = SEND_FUTURE_MAP.remove(seqNo);

@@ -1,5 +1,8 @@
 package com.lmx.pushplatform.server;
 
+import com.google.common.collect.ImmutableMultimap;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.lmx.pushplatform.proto.PushRequest;
 import com.lmx.pushplatform.proto.PushResponse;
 import io.netty.channel.ChannelHandler;
@@ -7,6 +10,9 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.List;
+import java.util.Map;
 
 @ChannelHandler.Sharable
 public class PushServerHandler extends SimpleChannelInboundHandler<PushRequest> {
@@ -40,15 +46,23 @@ public class PushServerHandler extends SimpleChannelInboundHandler<PushRequest> 
                 if (request.getToId() == null) {
                     return;
                 }
+                List<Map<String, Object>> list = Lists.newArrayList();
                 for (String toId : request.getToId()) {
+                    Map<String, Object> resp = Maps.newHashMap();
                     //ios推送走apns
                     if (request.getPlatform() == PushRequest.Platform.IOS.ordinal()) {
                         IosPushHelper.sendMsg(toId, "", request.getMsgContent());
                     } else {
-                        AndroidPushHelper.sendMsg(request, toId);
+                        boolean sendState = AndroidPushHelper.sendMsg(request, toId);
+                        resp.put(toId, sendState);
+                        list.add(resp);
                     }
                 }
                 PushResponse pushResponse_ = new PushResponse(request.getRequestId(), "发送成功");
+                pushResponse_.setFromId("push-server");
+                pushResponse_.setToId(Lists.newArrayList("push-admin"));
+                pushResponse_.setExtraData(list);
+                pushResponse_.setAppKey(request.getAppKey());
                 LOGGER.info("send origin response is {}", pushResponse_);
                 //回复调用者
                 ctx.writeAndFlush(pushResponse_);

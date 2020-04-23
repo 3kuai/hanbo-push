@@ -22,8 +22,11 @@ public class MessageEntity {
     private String messageContent;
     private String messageUrl;
     private int platform = 1;//默认1=安卓，2=ios，0=全平台
-    private String appId,appName;
+    private String appId, appName, remark;
     private int pushState;//0=init, 1=success
+    private int totalCnt;//设备总数
+    private int sendSuccessCnt;//消息送达数=在线设备数
+    private int sendFailCnt;//消息未送达数=离线设备数
     private int state;
     private Date createTime, updateTime;
 

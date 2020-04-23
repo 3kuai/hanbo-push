@@ -9,8 +9,12 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.scheduling.annotation.EnableScheduling;
+import org.springframework.transaction.annotation.EnableTransactionManagement;
 
 @SpringBootApplication
+@EnableScheduling
+@EnableTransactionManagement
 public class RestApiApplication {
 
     @Bean
@@ -39,6 +43,7 @@ public class RestApiApplication {
 
 
     public static void main(String[] args) {
+        System.setProperty("zk.hosts", "127.0.0.1:2181");
         SpringApplication.run(RestApiApplication.class, args);
     }
 }

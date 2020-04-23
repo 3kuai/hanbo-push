@@ -1,6 +1,7 @@
 package com.lmx.pushplatform.proto;
 
 import java.util.List;
+import java.util.Map;
 
 public class PushResponse {
     private String requestId;
@@ -11,6 +12,15 @@ public class PushResponse {
     private List<String> toId;
     private String msgContent;
     private String appKey;
+    private List<Map<String, Object>> extraData;
+
+    public List<Map<String, Object>> getExtraData() {
+        return extraData;
+    }
+
+    public void setExtraData(List<Map<String, Object>> extraData) {
+        this.extraData = extraData;
+    }
 
     public int getPushType() {
         return pushType;

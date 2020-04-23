@@ -5,25 +5,34 @@ import com.lmx.pushplatform.client.DynamicConnector;
 import com.lmx.pushplatform.proto.PushRequest;
 import org.junit.Test;
 
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicInteger;
+
 public class ClientTest {
-    private DynamicConnector dynamicConnector = new DynamicConnector();
-    private String appName = "stockApp";
+    private String appName = "stock-app";
     private ConsistencyHashRouter consistencyHashRouter = new ConsistencyHashRouter();
+
+    ExecutorService executorService = Executors.newFixedThreadPool(100);
 
     @Test
     public void clientATest() {
-        try {
-            PushRequest reg = new PushRequest();
-            reg.setMsgType(PushRequest.MessageType.REGISTY.ordinal());
-            reg.setPushType(PushRequest.PushType.PUSH.ordinal());
-            reg.setFromId("15821303235");
-            reg.setAppKey(appName);
-            for (; ; ) {
-                dynamicConnector.sendOnly(reg);
-                Thread.sleep(3000L);
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
+        DynamicConnector dynamicConnector = new DynamicConnector();
+        AtomicInteger atomicInteger = new AtomicInteger(2);
+        for (int i = 2; i <= 5; i++) {
+            executorService.execute(() -> {
+                try {
+                    PushRequest reg = new PushRequest();
+                    reg.setMsgType(PushRequest.MessageType.REGISTY.ordinal());
+                    reg.setPushType(PushRequest.PushType.PUSH.ordinal());
+                    reg.setFromId("1582130323" + atomicInteger.getAndIncrement());
+                    reg.setAppKey(appName);
+                    dynamicConnector.sendOnly(reg);
+                    Thread.sleep(Long.MAX_VALUE);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            });
         }
         try {
             Thread.sleep(Long.MAX_VALUE);
@@ -34,6 +43,7 @@ public class ClientTest {
 
     @Test
     public void clientBTest() {
+        DynamicConnector dynamicConnector = new DynamicConnector();
         try {
             PushRequest reg = new PushRequest();
             reg.setMsgType(PushRequest.MessageType.REGISTY.ordinal());

@@ -32,23 +32,24 @@ public class AndroidPushHelper {
     }
 
 
-    public static void sendMsg(PushRequest request, String toId) {
+    public static boolean sendMsg(PushRequest request, String toId) {
         String pushToId = RouterManager.getLocalRouter(request, toId);
         if (channelHandlerContextMap.containsKey(pushToId)) {
-            PushResponse pushResponse = new PushResponse(request.getMsgContent());
+            PushResponse pushResponse = new PushResponse(request.getRequestId(), request.getMsgContent());
             pushResponse.setAppKey(request.getAppKey());
             pushResponse.setFromId(request.getFromId());
-            pushResponse.setToId(request.getToId());
+            pushResponse.setToId(Lists.newArrayList(toId));
             pushResponse.setMsgType(request.getMsgType());
             LOGGER.info("send dest response is {}", pushResponse);
             channelHandlerContextMap.get(pushToId).writeAndFlush(pushResponse);
+            return true;
         } else {
             String hostAddress = RouterManager.getRedisRouter(request, toId);
             request.setToId(Lists.newArrayList(toId));
             request.setMsgType(PushRequest.MessageType.ROUTER_FORWARD.ordinal());
             if (hostAddress == null) {
                 LOGGER.warn("user has no register router...");
-                return;
+                return false;
             }
             if (!clientMap.containsKey(hostAddress)) {
                 ForwardClient client = new ForwardClient();
@@ -56,9 +57,11 @@ public class AndroidPushHelper {
                         HostAndPort.fromString(hostAddress).getPort());
                 client.send(request);
                 clientMap.put(hostAddress, client);
+                return true;
             } else {
                 try {
                     clientMap.get(hostAddress).send(request);
+                    return true;
                 } catch (Exception e) {
                     LOGGER.error("", e);
                     clientMap.remove(hostAddress);
@@ -73,7 +76,7 @@ public class AndroidPushHelper {
             IosPushHelper.sendMsg(toId, "", request.getMsgContent());
         } else {
             String pushToId = RouterManager.getLocalRouter(request, toId);
-            PushResponse pushResponse = new PushResponse(request.getMsgContent());
+            PushResponse pushResponse = new PushResponse(request.getRequestId(), request.getMsgContent());
             pushResponse.setAppKey(request.getAppKey());
             pushResponse.setFromId(request.getFromId());
             pushResponse.setToId(request.getToId());
