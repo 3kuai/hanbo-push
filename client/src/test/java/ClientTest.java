@@ -27,9 +27,14 @@ public class ClientTest {
                     reg.setFromId("1582130323" + atomicInteger.getAndIncrement());
                     reg.setAppKey(appName);
                     dynamicConnector.sendOnly(reg);
-                    Thread.sleep(Long.MAX_VALUE);
+                    while (true) {
+                        reg.setMsgType(PushRequest.MessageType.HEARTBEAT.ordinal());
+                        dynamicConnector.sendOnly(reg);
+                        Thread.sleep(10 * 1000L);
+                    }
                 } catch (Exception e) {
                     e.printStackTrace();
+                    System.exit(0);
                 }
             });
         }

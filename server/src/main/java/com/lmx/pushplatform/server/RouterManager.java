@@ -7,6 +7,8 @@ import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.JedisPoolConfig;
 
+import java.util.concurrent.TimeUnit;
+
 /**
  * 分布式路由表
  * Created by Administrator on 2018/11/29.
@@ -28,11 +30,21 @@ public class RouterManager {
         }
     }
 
+    public static String renewRouter(PushRequest request) {
+        String regId = request.getFromId();
+        String realRegId = getLocalRouter(request, regId);
+        Jedis jedis = jedisPool.getResource();
+        jedis.setex(realRegId, 60 * 5, PushServer.host + SPLITTER + PushServer.port);
+        jedis.close();
+        return realRegId;
+    }
+
     public static String regRouter(PushRequest request) {
         String regId = request.getFromId();
         String realRegId = getLocalRouter(request, regId);
         Jedis jedis = jedisPool.getResource();
-        jedis.set(realRegId, PushServer.host + SPLITTER + PushServer.port);
+        //1分钟过期，通过心跳延长
+        jedis.setex(realRegId, 60, PushServer.host + SPLITTER + PushServer.port);
         jedis.close();
         return realRegId;
     }

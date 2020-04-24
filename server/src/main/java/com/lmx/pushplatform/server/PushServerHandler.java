@@ -27,6 +27,12 @@ public class PushServerHandler extends SimpleChannelInboundHandler<PushRequest> 
         LOGGER.info("request is {}", request);
         switch (PushRequest.MessageType.getMessageType(request.getMsgType())) {
             /**
+             * 心跳保活
+             */
+            case HEARTBEAT:
+                RouterManager.renewRouter(request);
+                break;
+            /**
              *  注册路由事件:
              *      1、本地路由表维护连接；
              *      2、redis记录路由关系

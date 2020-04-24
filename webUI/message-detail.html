@@ -20,6 +20,11 @@
     <!--[if IE 6]>
     <script type="text/javascript" src="lib/DD_belatedPNG_0.0.8a-min.js"></script>
     <script>DD_belatedPNG.fix('*');</script>
+    <style>
+        .dataTables_wrapper .dataTables_paginate .paginate_button {
+            height: 36px;
+        }
+    </style>
     <![endif]-->
     <title>消息明细</title>
 </head>
@@ -56,6 +61,7 @@
     var site = "http://127.0.0.1/pushAdmin";
     var loadGrid = function (msgId, type) {
         $('#dataGrid').DataTable({
+            "searching": false,
             "processing": true,
             "serverSide": true,
             "ordering": false,
@@ -116,7 +122,10 @@
         return theRequest
     }
 </script>
-<script type="text/javascript">
-</script>
+<style>
+    .dataTables_wrapper .dataTables_paginate .paginate_button {
+        height: 36px;
+    }
+</style>
 </body>
 </html>
