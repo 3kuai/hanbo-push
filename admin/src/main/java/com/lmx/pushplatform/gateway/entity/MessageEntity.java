@@ -2,6 +2,7 @@ package com.lmx.pushplatform.gateway.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.*;
+import org.springframework.context.annotation.Lazy;
 
 import javax.persistence.*;
 import java.util.Date;
@@ -33,5 +34,6 @@ public class MessageEntity {
     @JsonIgnore
     @ManyToOne
     @JoinColumn(name = "appId", nullable = false, updatable = false, insertable = false)
+    @Lazy
     private AppEntity appEntity;
 }

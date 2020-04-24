@@ -8,4 +8,6 @@ import java.util.List;
 
 public interface DeviceMessageRep extends JpaRepository<DeviceMessageEntity, Long> {
     List<DeviceMessageEntity> findByAppName(String a);
+
+    List<MessageEntity> findByAppNameLikeOrDeliveryStateOrReadState(String a, String b, String c);
 }

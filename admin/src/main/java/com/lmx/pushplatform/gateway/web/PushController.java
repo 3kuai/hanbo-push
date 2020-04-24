@@ -1,8 +1,6 @@
 package com.lmx.pushplatform.gateway.web;
 
-import com.fasterxml.jackson.databind.ser.std.MapProperty;
 import com.google.common.collect.Lists;
-import com.google.common.collect.MapDifference;
 import com.google.common.collect.Sets;
 import com.lmx.pushplatform.client.DynamicConnector;
 import com.lmx.pushplatform.gateway.api.CommonResp;
@@ -15,12 +13,16 @@ import com.lmx.pushplatform.proto.PushRequest;
 import com.lmx.pushplatform.proto.PushResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.*;
+import org.springframework.data.jpa.domain.JpaSort;
 import org.springframework.util.CollectionUtils;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import javax.persistence.metamodel.Attribute;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -99,6 +101,9 @@ public class PushController {
         pushRequest.setAppKey(pushReq.getAppName());
 
         PushResponse pushResponse = clientDelegate.sendAndGet(pushRequest);
+        if (pushResponse == null) {
+            return CommonResp.defaultError("推送服务未启动");
+        }
         List<Map<String, Object>> resp = pushResponse.getExtraData();
         //统计消息送达和未送达
         Long sendSuccess = resp.stream().filter(map -> (Lists.newArrayList(map.values()).get(0).equals(true))).count();
@@ -129,7 +134,28 @@ public class PushController {
     }
 
     @PostMapping("admin/list")
-    public CommonResp list(@RequestBody PushReq pushReq) {
-        return CommonResp.defaultSuccess(messageRep.findByAppName(pushReq.getAppName()));
+    public CommonResp list(PushReq pushReq) {
+        String searchKey = (String) pushReq.getSearch().get("value");
+        Pageable pageable = new PageRequest(pushReq.getStart() / 10, pushReq.getLength(), new Sort(Sort.Direction.DESC, "createTime"));
+        Page page;
+        if (StringUtils.isEmpty(searchKey)) {
+            page = messageRep.findAll(pageable);
+        } else {
+            page = messageRep.findByAppNameLikeOrMessageContentLikeOrMessageTitleLike("%" + searchKey + "%", "%" + searchKey + "%", "%" + searchKey + "%", pageable);
+        }
+        CommonResp resp = CommonResp.defaultSuccess(page.iterator());
+        resp.setRecordsTotal((int) page.getTotalElements());
+        resp.setRecordsFiltered(resp.getRecordsTotal());
+        return resp;
+    }
+
+    @PostMapping("admin/listDetail")
+    public CommonResp listDetail(PushReq pushReq) {
+        Pageable pageable = new PageRequest(pushReq.getStart() / 10, pushReq.getLength(), new Sort(Sort.Direction.DESC, "createTime"));
+        Page page = deviceMessageRep.findAll(Example.of(DeviceMessageEntity.builder().messageId(pushReq.getMsgId().longValue()).deliveryState(pushReq.getType()).build()), pageable);
+        CommonResp resp = CommonResp.defaultSuccess(page.iterator());
+        resp.setRecordsTotal((int) page.getTotalElements());
+        resp.setRecordsFiltered(resp.getRecordsTotal());
+        return resp;
     }
 }

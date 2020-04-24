@@ -118,8 +118,9 @@ public class Connector extends SimpleChannelInboundHandler<PushResponse> {
     }
 
     void checkConn() throws Exception {
-        if (!channel.isOpen())
+        if (!channel.isOpen()) {
             throw new Exception("conn is close");
+        }
     }
 
     public void close() {

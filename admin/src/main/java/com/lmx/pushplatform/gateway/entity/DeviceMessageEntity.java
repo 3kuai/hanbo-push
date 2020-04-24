@@ -17,11 +17,11 @@ import java.util.Date;
 public class DeviceMessageEntity {
     @Id
     @GeneratedValue
-    private long id;
-    private long appId, messageId;
+    private Long id;
+    private Long appId, messageId;
     private String appName, deviceId;
     /*deliveryState 投递状态 1=投递成功，0=未投递*/
-    private int deliveryState, readState;
+    private Integer deliveryState, readState;
     private Date createTime, updateTime;
 
     @JsonIgnore

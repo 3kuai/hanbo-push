@@ -44,6 +44,11 @@ public class ForwardClient extends SimpleChannelInboundHandler<PushResponse> {
      * @param pushRequest
      */
     public void send(PushRequest pushRequest) {
-        channel.writeAndFlush(pushRequest);
+        if (channel.isOpen())
+            channel.writeAndFlush(pushRequest);
+        else {
+            channel.close();
+            throw new RuntimeException(String.format("连接[%s]不可用", channel));
+        }
     }
 }

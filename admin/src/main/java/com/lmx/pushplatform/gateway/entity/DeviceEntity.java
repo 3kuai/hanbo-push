@@ -17,11 +17,11 @@ import java.util.Date;
 public class DeviceEntity implements Serializable {
     @Id
     @GeneratedValue
-    private long id;
+    private Long id;
     private String deviceId;
     private String appId;
-    private int platform;
-    private int state;
+    private Integer platform;
+    private Integer state;
     private Date createTime, updateTime;
     @ManyToOne
     @JoinColumn(name = "appId", nullable = false, updatable = false, insertable = false)

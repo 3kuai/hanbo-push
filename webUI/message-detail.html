@@ -1,0 +1,122 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="renderer" content="webkit|ie-comp|ie-stand">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport"
+          content="width=device-width,initial-scale=1,minimum-scale=1.0,maximum-scale=1.0,user-scalable=no"/>
+    <meta http-equiv="Cache-Control" content="no-siteapp"/>
+    <!--[if lt IE 9]>
+    <script type="text/javascript" src="lib/html5shiv.js"></script>
+    <script type="text/javascript" src="lib/respond.min.js"></script>
+    <![endif]-->
+    <link rel="stylesheet" type="text/css" href="static/h-ui/css/H-ui.min.css"/>
+    <link rel="stylesheet" type="text/css" href="static/h-ui.admin/css/H-ui.admin.css"/>
+    <link rel="stylesheet" type="text/css" href="lib/Hui-iconfont/1.0.8/iconfont.css"/>
+    <link rel="stylesheet" type="text/css" href="static/h-ui.admin/skin/default/skin.css" id="skin"/>
+    <link rel="stylesheet" type="text/css" href="static/h-ui.admin/css/style.css"/>
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.20/css/jquery.dataTables.min.css"/>
+    <!--[if IE 6]>
+    <script type="text/javascript" src="lib/DD_belatedPNG_0.0.8a-min.js"></script>
+    <script>DD_belatedPNG.fix('*');</script>
+    <![endif]-->
+    <title>消息明细</title>
+</head>
+<body>
+<div class="page-container">
+    <div class="mt-20">
+        <table id="dataGrid" class="display table  table-bg table-hover table-sort" style="width:100%">
+            <thead>
+            <tr>
+                <th width="80">设备号</th>
+                <th width="80">APP名称</th>
+                <th width="100">推送状态</th>
+                <th width="100">读取状态</th>
+                <th width="150">推送时间</th>
+            </tr>
+            </thead>
+        </table>
+    </div>
+</div>
+
+<!--_footer 作为公共模版分离出去-->
+<script src="lib/jquery/1.9.1/jquery.min.js"></script>
+<script type="text/javascript" src="lib/layer/2.4/layer.js"></script>
+<script type="text/javascript" src="static/h-ui/js/H-ui.min.js"></script>
+<script type="text/javascript" src="static/h-ui.admin/js/H-ui.admin.js"></script> <!--/_footer 作为公共模版分离出去-->
+
+<!--请在下方写此页面业务相关的脚本-->
+<script type="text/javascript" src="lib/My97DatePicker/4.8/WdatePicker.js"></script>
+<script type="text/javascript" src="lib/laypage/1.2/laypage.js"></script>
+<script type="text/javascript" src="https://code.jquery.com/jquery-3.3.1.js"></script>
+<script type="text/javascript" src="https://cdn.datatables.net/1.10.20/js/jquery.dataTables.min.js"></script>
+<script>
+    var firstApp;
+    var site = "http://127.0.0.1/pushAdmin";
+    var loadGrid = function (msgId, type) {
+        $('#dataGrid').DataTable({
+            "processing": true,
+            "serverSide": true,
+            "ordering": false,
+            "oLanguage": {
+                "sLengthMenu": "每页显示 _MENU_ 条记录",
+                "sZeroRecords": "对不起，没有匹配的数据",
+                "sInfo": "第 _START_ - _END_ 条 / 共 _TOTAL_ 条数据",
+                "sInfoEmpty": "没有匹配的数据",
+                "sInfoFiltered": "(数据表中共 _MAX_ 条记录)",
+                "sProcessing": "正在加载中...",
+                "sSearch": "全文搜索：",
+                "oPaginate": {
+                    "sFirst": "第一页",
+                    "sPrevious": " 上一页 ",
+                    "sNext": " 下一页 ",
+                    "sLast": " 最后一页 "
+                }
+            },
+            "ajax": {
+                url: site + "/push/admin/listDetail?msgId=" + msgId + "&type=" + type,
+                dataType: "json",
+                type: "post",
+                headers: {"token": localStorage.getItem("token")}
+            },
+            "columns": [
+                {"data": "deviceId"},
+                {"data": "appName"},
+                {
+                    "data": "deliveryState",
+                    "mRender": function (mData, type, full) {
+                        return full.deliveryState === 1 ? "已送达" : "未送达";
+                    }
+                },
+                {
+                    "data": "readState",
+                    "mRender": function (mData, type, full) {
+                        return full.readState === 1 ? "已读" : "未读";
+                    }
+                },
+                {"data": "createTime"}
+            ]
+        });
+    }
+    $(function () {
+        var param = RequestParameter();
+        loadGrid(param["msgId"], param["type"]);
+    });
+    function RequestParameter() {
+        var url = window.location.search; //获取url中"?"符后的字串
+        var theRequest = new Object();
+        if (url.indexOf("?") != -1) {
+            var str = url.substr(1);
+            var strs = str.split("&");
+            for (var i = 0; i < strs.length; i++) {
+                theRequest[strs[i].split("=")[0]] = (strs[i].split("=")[1]);
+            }
+        }
+        return theRequest
+    }
+</script>
+<script type="text/javascript">
+</script>
+</body>
+</html>

@@ -13,6 +13,7 @@ public class DynamicConnector {
     private ServiceSubscriber subscriber = ServiceSubscriber.getServiceSubscriber();
     private ConsistencyHashRouter consistencyHashRouter = new ConsistencyHashRouter();
     private final Logger LOGGER = LoggerFactory.getLogger(DynamicConnector.class);
+    final static int RETRY_TIMES = 3;
 
     public DynamicConnector() {
         try {
@@ -43,6 +44,7 @@ public class DynamicConnector {
 
     public void initConnect() {
         List<String> hosts = subscriber.getServiceAddress();
+        consistencyHashRouter.clear();
         consistencyHashRouter.initHashCycle(hosts, null);
     }
 
@@ -66,13 +68,21 @@ public class DynamicConnector {
     public synchronized PushResponse sendAndGet(PushRequest pushRequest) {
         if (!hasClients())
             return null;
-        try {
-            Connector connector = consistencyHashRouter.router(pushRequest.getFromId());
-            return connector.sendAndGet(pushRequest);
-        } catch (Exception e) {
-            LOGGER.error("", e);
-            return null;
-        }
+        PushResponse pushResponse = null;
+        int cnt = 0;
+        do {
+            try {
+                Connector connector = consistencyHashRouter.router(pushRequest.getFromId());
+                pushResponse = connector.sendAndGet(pushRequest);
+                if (pushResponse != null) {
+                    return pushResponse;
+                }
+                cnt++;
+            } catch (Exception e) {
+                initConnect();
+            }
+        } while (pushResponse == null && cnt < RETRY_TIMES);
+        return null;
     }
 
     boolean hasClients() {

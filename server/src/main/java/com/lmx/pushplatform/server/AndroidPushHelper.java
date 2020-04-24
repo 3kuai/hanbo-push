@@ -53,7 +53,7 @@ public class AndroidPushHelper {
             }
             if (!clientMap.containsKey(hostAddress)) {
                 ForwardClient client = new ForwardClient();
-                client.initConn(HostAndPort.fromHost(hostAddress).getHostText(),
+                client.initConn(HostAndPort.fromString(hostAddress).getHostText(),
                         HostAndPort.fromString(hostAddress).getPort());
                 client.send(request);
                 clientMap.put(hostAddress, client);

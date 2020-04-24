@@ -100,4 +100,10 @@ public class ConsistencyHashRouter {
     public List<Connector> getRealClients() {
         return realClients;
     }
+
+    void clear() {
+        realClients.clear();
+        realClientNodes.clear();
+        hashCycle.clear();
+    }
 }

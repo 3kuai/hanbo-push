@@ -12,16 +12,15 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class ClientTest {
     private String appName = "stock-app";
     private ConsistencyHashRouter consistencyHashRouter = new ConsistencyHashRouter();
-
-    ExecutorService executorService = Executors.newFixedThreadPool(100);
+    private ExecutorService executorService = Executors.newFixedThreadPool(100);
 
     @Test
     public void clientATest() {
-        DynamicConnector dynamicConnector = new DynamicConnector();
         AtomicInteger atomicInteger = new AtomicInteger(2);
         for (int i = 2; i <= 5; i++) {
             executorService.execute(() -> {
                 try {
+                    DynamicConnector dynamicConnector = new DynamicConnector();
                     PushRequest reg = new PushRequest();
                     reg.setMsgType(PushRequest.MessageType.REGISTY.ordinal());
                     reg.setPushType(PushRequest.PushType.PUSH.ordinal());
