@@ -1,8 +1,6 @@
-import com.google.common.collect.Lists;
-import com.lmx.pushplatform.client.Connector;
-import com.lmx.pushplatform.client.ConsistencyHashRouter;
 import com.lmx.pushplatform.client.DynamicConnector;
 import com.lmx.pushplatform.proto.PushRequest;
+import org.junit.Before;
 import org.junit.Test;
 
 import java.util.concurrent.ExecutorService;
@@ -10,17 +8,23 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class ClientTest {
+    //订阅消息的app名称
     private String appName = "stock-app";
-    private ConsistencyHashRouter consistencyHashRouter = new ConsistencyHashRouter();
-    private ExecutorService executorService = Executors.newFixedThreadPool(100);
+    private ExecutorService executorService = Executors.newFixedThreadPool(64);
+
+    @Before
+    public void setProperty() {
+        System.setProperty("zk.hosts", "127.0.0.1:2181");
+    }
 
     @Test
-    public void clientATest() {
+    public void mockCurrencyApp() {
         AtomicInteger atomicInteger = new AtomicInteger(2);
         for (int i = 2; i <= 4; i++) {
             executorService.execute(() -> {
                 try {
                     DynamicConnector dynamicConnector = new DynamicConnector();
+                    //用手机号模拟设备号（一般是mac地址）
                     String fromId = "1582130323" + atomicInteger.getAndIncrement();
                     //订阅推送事件
                     PushRequest reg = new PushRequest();
@@ -41,6 +45,7 @@ public class ClientTest {
                     }
                 } catch (Exception e) {
                     e.printStackTrace();
+                    //如果异常则退出当前等待消息的app进程
                     System.exit(0);
                 }
             });
@@ -52,38 +57,4 @@ public class ClientTest {
         }
     }
 
-    @Test
-    public void clientBTest() {
-        DynamicConnector dynamicConnector = new DynamicConnector();
-        try {
-            PushRequest reg = new PushRequest();
-            reg.setMsgType(PushRequest.MessageType.REGISTY.ordinal());
-            reg.setPushType(PushRequest.PushType.PUSH.ordinal());
-            reg.setFromId("13120615313");
-            reg.setAppKey(appName);
-            dynamicConnector.sendOnly(reg);
-
-            PushRequest pub = new PushRequest();
-            pub.setMsgType(PushRequest.MessageType.DILIVERY_MSG.ordinal());
-            pub.setPushType(PushRequest.PushType.PUSH.ordinal());
-            pub.setFromId("13120615313");
-            pub.setToId(Lists.newArrayList("15821303235"));
-            pub.setMsgContent("this is a push message");
-            pub.setAppKey(appName);
-            for (int i = 0; i < 20; i++) {
-                dynamicConnector.sendAndGet(pub);
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
-    @Test
-    public void consistencyHash() {
-        consistencyHashRouter.initHashCycle(Lists.newArrayList("192.168.1.100", "192.168.1.102", "192.168.1.105"), null);
-        for (int i = 0; i < 100; i++) {
-            Connector node = consistencyHashRouter.router("213.60.11." + ++i);
-            System.err.println(node);
-        }
-    }
 }
