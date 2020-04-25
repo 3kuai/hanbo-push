@@ -17,18 +17,25 @@ public class ClientTest {
     @Test
     public void clientATest() {
         AtomicInteger atomicInteger = new AtomicInteger(2);
-        for (int i = 2; i <= 5; i++) {
+        for (int i = 2; i <= 4; i++) {
             executorService.execute(() -> {
                 try {
                     DynamicConnector dynamicConnector = new DynamicConnector();
+                    String fromId = "1582130323" + atomicInteger.getAndIncrement();
+                    //订阅推送事件
                     PushRequest reg = new PushRequest();
                     reg.setMsgType(PushRequest.MessageType.REGISTY.ordinal());
                     reg.setPushType(PushRequest.PushType.PUSH.ordinal());
-                    reg.setFromId("1582130323" + atomicInteger.getAndIncrement());
+                    reg.setFromId(fromId);
                     reg.setAppKey(appName);
                     dynamicConnector.sendOnly(reg);
                     while (true) {
+                        //发送心跳维持在线活跃状态
+                        reg = new PushRequest();
                         reg.setMsgType(PushRequest.MessageType.HEARTBEAT.ordinal());
+                        reg.setPushType(PushRequest.PushType.PUSH.ordinal());
+                        reg.setAppKey(appName);
+                        reg.setFromId(fromId);
                         dynamicConnector.sendOnly(reg);
                         Thread.sleep(10 * 1000L);
                     }

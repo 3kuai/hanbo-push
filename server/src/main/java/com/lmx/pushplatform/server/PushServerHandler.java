@@ -1,6 +1,5 @@
 package com.lmx.pushplatform.server;
 
-import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.lmx.pushplatform.proto.PushRequest;
@@ -87,13 +86,13 @@ public class PushServerHandler extends SimpleChannelInboundHandler<PushRequest> 
     @Override
     public void channelActive(ChannelHandlerContext ctx) throws Exception {
         super.channelActive(ctx);
-        LOGGER.info("connected channel={}", ctx.channel());
+        LOGGER.debug("connected channel={}", ctx.channel());
     }
 
     @Override
     public void channelInactive(ChannelHandlerContext ctx) throws Exception {
         super.channelInactive(ctx);
-        LOGGER.info("disconnect channel={}", ctx.channel());
+        LOGGER.debug("disconnect channel={}", ctx.channel());
         ctx.close();
     }
 

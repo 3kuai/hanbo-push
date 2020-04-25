@@ -127,4 +127,10 @@ public class Connector extends SimpleChannelInboundHandler<PushResponse> {
         channel.close();
         group.shutdownGracefully();
     }
+
+    @Override
+    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
+        LOGGER.error("", cause);
+        close();
+    }
 }

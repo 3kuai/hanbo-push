@@ -42,6 +42,8 @@ public class PushServer {
                 .childOption(ChannelOption.TCP_NODELAY, true);
 
         ChannelFuture future = bootstrap.bind(serverAddress, port).sync();
+        //绑定端口之后暴露主机地址
+        ServiceRegister.exposeApp();
         LOGGER.info("push-server started on port {}", port);
         future.channel().closeFuture().sync();
     }
@@ -54,7 +56,6 @@ public class PushServer {
     public static void main(String[] args) {
         PushServer server = null;
         try {
-            ServiceRegister.exposeApp();
             server = new PushServer(host, Integer.parseInt(port));
         } catch (Exception e) {
             LOGGER.error("", e);
