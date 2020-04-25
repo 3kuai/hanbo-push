@@ -47,7 +47,8 @@
                 <ul class="cl">
                     <li>当前用户:</li>
                     <li class="dropDown dropDown_hover">
-                        <a href="#" class="dropDown_A"><span id="currentUser"></span><i class="Hui-iconfont">&#xe6d5;</i></a>
+                        <a href="#" class="dropDown_A"><span id="currentUser"></span><i
+                                class="Hui-iconfont">&#xe6d5;</i></a>
                         <ul class="dropDown-menu menu radius box-shadow">
                             <li><a href="javascript:;" onClick="myselfinfo()">个人信息</a></li>
                             <li><a href="#">切换账户</a></li>
@@ -75,6 +76,14 @@
 </header>
 <aside class="Hui-aside">
     <div class="menu_dropdown bk_2">
+        <dl id="menu-aaaaa">
+            <dt><i class="Hui-iconfont">&#xe616;</i> 运行大盘<i class="Hui-iconfont menu_dropdown-arrow">&#xe6d5;</i></dt>
+            <dd>
+                <ul>
+                    <li><a data-href="statics.html" data-title="报表展示" href="javascript:void(0)">报表展示</a></li>
+                </ul>
+            </dd>
+        </dl>
         <dl id="menu-article">
             <dt><i class="Hui-iconfont">&#xe616;</i> APP管理<i class="Hui-iconfont menu_dropdown-arrow">&#xe6d5;</i></dt>
             <dd>
@@ -88,17 +97,6 @@
             <dd>
                 <ul>
                     <li><a data-href="message-list.html" data-title="消息管理" href="javascript:void(0)">消息管理</a></li>
-                </ul>
-            </dd>
-        </dl>
-    </div>
-
-    <div class="menu_dropdown bk_2" style="display:none">
-        <dl id="menu-aaaaa">
-            <dt><i class="Hui-iconfont">&#xe616;</i> 二级导航1<i class="Hui-iconfont menu_dropdown-arrow">&#xe6d5;</i></dt>
-            <dd>
-                <ul>
-                    <li><a data-href="article-list.html" data-title="资讯管理" href="javascript:void(0)">三级导航</a></li>
                 </ul>
             </dd>
         </dl>
@@ -168,18 +166,18 @@
 <script type="text/javascript">
     $(function () {
         /*$("#min_title_list li").contextMenu('Huiadminmenu', {
-            bindings: {
-                'closethis': function(t) {
-                    console.log(t);
-                    if(t.find("i")){
-                        t.find("i").trigger("click");
-                    }
-                },
-                'closeall': function(t) {
-                    alert('Trigger was '+t.id+'\nAction was Email');
-                },
-            }
-        });*/
+         bindings: {
+         'closethis': function(t) {
+         console.log(t);
+         if(t.find("i")){
+         t.find("i").trigger("click");
+         }
+         },
+         'closeall': function(t) {
+         alert('Trigger was '+t.id+'\nAction was Email');
+         },
+         }
+         });*/
 
 
         $("body").Huitab({
