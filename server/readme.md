@@ -12,6 +12,7 @@
     -Dport=6688 
     -Dredis.host=127.0.0.1 
     -Dredis.port=6379 
+    -Dredis.password= 
     -Dzk.hosts=127.0.0.1:2181
     -Dios.certFilePath=
     -Dios.certPwd=

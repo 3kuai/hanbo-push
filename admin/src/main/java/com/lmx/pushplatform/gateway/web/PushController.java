@@ -117,15 +117,15 @@ public class PushController {
                 .remark("推送成功").createTime(new Date())
                 .build();
         messageRep.save(messageEntity);
-
+        List<DeviceMessageEntity> deviceMessageEntities = Lists.newArrayList();
         resp.forEach(obj -> obj.forEach((k, v) -> {
             String deviceId = k;
             String appName = pushReq.getAppName();
             Long appId = appEntity.getId();
-            deviceMessageRep.save(DeviceMessageEntity.builder()
+            deviceMessageEntities.add(DeviceMessageEntity.builder()
                     .messageId(messageEntity.getId()).deviceId(deviceId).appId(appId).appName(appName).deliveryState(v.equals(true) ? 1 : 0).readState(0).createTime(new Date()).build());
         }));
-
+        deviceMessageRep.save(deviceMessageEntities);
         log.info("admin push msg={}", pushRequest);
         return CommonResp.defaultSuccess();
     }

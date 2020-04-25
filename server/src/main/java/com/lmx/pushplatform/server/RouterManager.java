@@ -7,8 +7,6 @@ import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.JedisPoolConfig;
 
-import java.util.concurrent.TimeUnit;
-
 /**
  * 分布式路由表
  * Created by Administrator on 2018/11/29.
@@ -22,8 +20,14 @@ public class RouterManager {
 
     static {
         try {
-            jedisPool = new JedisPool(new JedisPoolConfig(),
-                    System.getProperty("redis.host"), Integer.parseInt(System.getProperty("redis.port")));
+            if (!System.getProperty("redis.password").isEmpty())
+                jedisPool = new JedisPool(new JedisPoolConfig(),
+                        System.getProperty("redis.host"), Integer.parseInt(System.getProperty("redis.port")),
+                        5000, System.getProperty("redis.password"));
+            else
+                jedisPool = new JedisPool(new JedisPoolConfig(),
+                        System.getProperty("redis.host"), Integer.parseInt(System.getProperty("redis.port")),
+                        5000);
         } catch (Exception e) {
             LOGGER.error("", e);
             System.exit(0);

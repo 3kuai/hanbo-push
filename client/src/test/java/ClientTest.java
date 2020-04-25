@@ -1,4 +1,4 @@
-import com.lmx.pushplatform.client.DynamicConnector;
+import com.lmx.pushplatform.client.Connector;
 import com.lmx.pushplatform.proto.PushRequest;
 import org.junit.Test;
 
@@ -19,7 +19,9 @@ public class ClientTest {
         for (int i = 0; i <= currencyNum; i++) {
             executorService.execute(() -> {
                 try {
-                    DynamicConnector dynamicConnector = new DynamicConnector();
+                    Connector client = new Connector();
+                    //因为是模拟所以直接跟推送服务建立长连接，正常应该是通过rest接口拿到一路可用的推送地址
+                    client.initConn("127.0.0.1", 6688);
                     //用手机号模拟设备号（一般是mac地址）
                     String fromId = String.valueOf(15821303232L + atomicInteger.getAndIncrement());
                     //订阅推送事件
@@ -28,7 +30,7 @@ public class ClientTest {
                     reg.setPushType(PushRequest.PushType.PUSH.ordinal());
                     reg.setFromId(fromId);
                     reg.setAppKey(appName);
-                    dynamicConnector.sendOnly(reg);
+                    client.sendOnly(reg);
                     while (true) {
                         //发送心跳维持在线活跃状态
                         reg = new PushRequest();
@@ -36,7 +38,7 @@ public class ClientTest {
                         reg.setPushType(PushRequest.PushType.PUSH.ordinal());
                         reg.setAppKey(appName);
                         reg.setFromId(fromId);
-                        dynamicConnector.sendOnly(reg);
+                        client.sendOnly(reg);
                         Thread.sleep(10 * 1000L);
                     }
                 } catch (Exception e) {

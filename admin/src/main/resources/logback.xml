@@ -45,12 +45,6 @@
         </encoder>
     </appender>
 
-    <logger name="org.hibernate" level="INFO" additivity="false">
-        <appender-ref ref="appLog"/>
-        <appender-ref ref="sqlLog"/>
-        <appender-ref ref="STDOUT"/>
-    </logger>
-
     <root level="info">
         <appender-ref ref="STDOUT"/>
     </root>
