@@ -1,6 +1,5 @@
 import com.lmx.pushplatform.client.DynamicConnector;
 import com.lmx.pushplatform.proto.PushRequest;
-import org.junit.Before;
 import org.junit.Test;
 
 import java.util.concurrent.ExecutorService;
@@ -10,22 +9,19 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class ClientTest {
     //订阅消息的app名称
     private String appName = "stock-app";
-    private ExecutorService executorService = Executors.newFixedThreadPool(64);
-
-    @Before
-    public void setProperty() {
-        System.setProperty("zk.hosts", "127.0.0.1:2181");
-    }
+    //并发数
+    private int currencyNum = 2;
+    private ExecutorService executorService = Executors.newFixedThreadPool(currencyNum + 16);
 
     @Test
     public void mockCurrencyApp() {
-        AtomicInteger atomicInteger = new AtomicInteger(2);
-        for (int i = 2; i <= 4; i++) {
+        AtomicInteger atomicInteger = new AtomicInteger(0);
+        for (int i = 0; i <= currencyNum; i++) {
             executorService.execute(() -> {
                 try {
                     DynamicConnector dynamicConnector = new DynamicConnector();
                     //用手机号模拟设备号（一般是mac地址）
-                    String fromId = "1582130323" + atomicInteger.getAndIncrement();
+                    String fromId = String.valueOf(15821303232L + atomicInteger.getAndIncrement());
                     //订阅推送事件
                     PushRequest reg = new PushRequest();
                     reg.setMsgType(PushRequest.MessageType.REGISTY.ordinal());

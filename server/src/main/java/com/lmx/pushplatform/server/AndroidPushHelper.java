@@ -94,8 +94,8 @@ public class AndroidPushHelper {
     public static void unRegChannel(ChannelHandlerContext ctx) {
         ctx.close();
         String id = ctx.channel().attr(attributeKey).get();
-        LOGGER.info("unRegChannel userId ={}", id);
         if (id != null) {
+            LOGGER.info("unRegChannel userId ={}", id);
             RouterManager.removeRedisRouter(id);
             channelHandlerContextMap.remove(id);
         }
