@@ -53,69 +53,12 @@
         <section class="content">
 
             <!-- 任务信息 -->
-            <div class="row">
-
-                <!-- 任务信息 -->
-                <div class="col-md-4 col-sm-6 col-xs-12">
-                    <div class="info-box bg-aqua">
-                        <span class="info-box-icon"><i class="fa fa-flag-o"></i></span>
-
-                        <div class="info-box-content">
-                            <span class="info-box-text">1</span>
-                            <span class="info-box-number">1</span>
-
-                            <div class="progress">
-                                <div class="progress-bar" style="width: 100%"></div>
-                            </div>
-                            <span class="progress-description">1</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 调度信息 -->
-                <div class="col-md-4 col-sm-6 col-xs-12">
-                    <div class="info-box bg-yellow">
-                        <span class="info-box-icon"><i class="fa fa-calendar"></i></span>
-
-                        <div class="info-box-content">
-                            <span class="info-box-text">1</span>
-                            <span class="info-box-number">1</span>
-
-                            <div class="progress">
-                                <div class="progress-bar" style="width: 100%"></div>
-                            </div>
-                            <span class="progress-description">
-                                12
-                            </span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 执行器 -->
-                <div class="col-md-4 col-sm-6 col-xs-12">
-                    <div class="info-box bg-green">
-                        <span class="info-box-icon"><i class="fa ion-ios-settings-strong"></i></span>
-
-                        <div class="info-box-content">
-                            <span class="info-box-text">2</span>
-                            <span class="info-box-number">1</span>
-
-                            <div class="progress">
-                                <div class="progress-bar" style="width: 100%"></div>
-                            </div>
-                            <span class="progress-description">1</span>
-                        </div>
-                    </div>
-                </div>
-
-            </div>
 
             <!-- 调度报表：时间区间筛选，左侧折线图 + 右侧饼图 -->
             <div class="row">
                 <div class="col-md-12">
                     <div class="box">
                         <div class="box-header with-border">
-                            <h3 class="box-title">调度报表：时间区间筛选，左侧折线图 + 右侧饼图</h3>
                             <!--
                             <
                             input type="text" class="form-control" id="filterTime" readonly >-->
@@ -213,41 +156,42 @@
          * @param endDate
          */
         function freshChartDate(startDate, endDate) {
-            var data = {
-                "code": 200,
-                "msg": null,
-                "content": {
-                    "triggerCountFailTotal": 831,
-                    "triggerDayList": ["2020-04-18", "2020-04-19", "2020-04-20", "2020-04-21", "2020-04-22", "2020-04-23", "2020-04-24", "2020-04-25"],
-                    "triggerDayCountRunningList": [0, 0, 0, 1, 0, 0, 0, 0],
-                    "triggerCountSucTotal": 9969,
-                    "triggerDayCountFailList": [245, 245, 125, 85, 130, 0, 1, 0],
-                    "triggerCountRunningTotal": 1,
-                    "triggerDayCountSucList": [941, 938, 1075, 1282, 1418, 1756, 1755, 804]
-                }
-            };
-//            $.ajax({
-//                type: 'POST',
-//                url: base_url + '/chartInfo',
-//                data: {
-//                    'startDate': startDate.format('YYYY-MM-DD HH:mm:ss'),
-//                    'endDate': endDate.format('YYYY-MM-DD HH:mm:ss')
-//                },
-//                dataType: "json",
-//                success: function (data) {
-//                    if (data.code == 200) {
-            lineChartInit(data)
-            pieChartInit(data);
-//                    } else {
-//                        layer.open({
-//                            title: I18n.system_tips,
-//                            btn: ["成功"],
-//                            content: (data.msg || "调度报表数据加载异常" ),
-//                            icon: '2'
-//                        });
-//                    }
+//            var data = {
+//                "code": 200,
+//                "msg": null,
+//                "content": {
+//                    "triggerCountFailTotal": 831,
+//                    "triggerCountSucTotal": 9969,
+//                    "triggerCountRunningTotal": 1,
+//                    "triggerDayList": ["2020-04-18", "2020-04-19", "2020-04-20", "2020-04-21", "2020-04-22", "2020-04-23", "2020-04-24", "2020-04-25"],
+//                    "triggerDayCountRunningList": [0, 0, 0, 1, 0, 0, 0, 0],
+//                    "triggerDayCountSucList": [941, 938, 1075, 1282, 1418, 1756, 1755, 804],
+//                    "triggerDayCountFailList": [245, 245, 125, 85, 130, 0, 1, 0]
+//
 //                }
-//            });
+//            };
+            $.ajax({
+                type: 'POST',
+                url: '/pushAdmin/push/admin/chartInfo',
+                data: {
+                    'startDate': startDate.format('YYYY-MM-DD HH:mm:ss'),
+                    'endDate': endDate.format('YYYY-MM-DD HH:mm:ss')
+                },
+                dataType: "json",
+                success: function (data) {
+                    if (data.code === "0000") {
+                        lineChartInit(data)
+                        pieChartInit(data);
+                    } else {
+                        layer.open({
+                            title: I18n.system_tips,
+                            btn: ["成功"],
+                            content: (data.msg || "调度报表数据加载异常" ),
+                            icon: '2'
+                        });
+                    }
+                }
+            });
         }
 
         /**
@@ -256,7 +200,7 @@
         function lineChartInit(data) {
             var option = {
                 title: {
-                    text: "执行器数列"
+                    text: "消息送达率"
                 },
                 tooltip: {
                     trigger: 'axis',
@@ -268,7 +212,7 @@
                     }
                 },
                 legend: {
-                    data: ["成功", "失败", "运行中"]
+                    data: ["成功", "失败"/*, "运行中"*/]
                 },
                 toolbox: {
                     feature: {
@@ -285,7 +229,7 @@
                     {
                         type: 'category',
                         boundaryGap: false,
-                        data: data.content.triggerDayList
+                        data: data.data.triggerDayList
                     }
                 ],
                 yAxis: [
@@ -299,7 +243,7 @@
                         type: 'line',
                         stack: 'Total',
                         areaStyle: {normal: {}},
-                        data: data.content.triggerDayCountSucList
+                        data: data.data.triggerDayCountSucList
                     },
                     {
                         name: "失败",
@@ -312,15 +256,15 @@
                             }
                         },
                         areaStyle: {normal: {}},
-                        data: data.content.triggerDayCountFailList
-                    },
-                    {
-                        name: "运行中",
-                        type: 'line',
-                        stack: 'Total',
-                        areaStyle: {normal: {}},
-                        data: data.content.triggerDayCountRunningList
-                    }
+                        data: data.data.triggerDayCountFailList
+                    }/*,
+                     {
+                     name: "运行中",
+                     type: 'line',
+                     stack: 'Total',
+                     areaStyle: {normal: {}},
+                     data: data.data.triggerDayCountRunningList
+                     }*/
                 ],
                 color: ['#00A65A', '#c23632', '#F39C12']
             };
@@ -335,7 +279,7 @@
         function pieChartInit(data) {
             var option = {
                 title: {
-                    text: "发送率",
+                    text: "概览",
                     /*subtext: 'subtext',*/
                     x: 'center'
                 },
@@ -346,7 +290,7 @@
                 legend: {
                     orient: 'vertical',
                     left: 'left',
-                    data: ["成功", "失败", "运行中"]
+                    data: ["成功", "失败"/*, "运行中"*/]
                 },
                 series: [
                     {
@@ -357,16 +301,16 @@
                         data: [
                             {
                                 name: "成功",
-                                value: data.content.triggerCountSucTotal
+                                value: data.data.triggerCountSucTotal
                             },
                             {
                                 name: "失败",
-                                value: data.content.triggerCountFailTotal
-                            },
-                            {
-                                name: "运行中",
-                                value: data.content.triggerCountRunningTotal
-                            }
+                                value: data.data.triggerCountFailTotal
+                            }/*,
+                             {
+                             name: "运行中",
+                             value: data.data.triggerCountRunningTotal
+                             }*/
                         ],
                         itemStyle: {
                             emphasis: {

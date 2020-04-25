@@ -141,7 +141,7 @@
                         "mRender": function (mData, type, full) {
                             var html = [];
                             if (full.sendSuccessCnt > 0) {
-                                html.push('<a href="javascript:openPushDetail(\'' + full.id + '\',1)"><span style="color: #167427;">' + full.sendSuccessCnt + '</span></a>');
+                                html.push('<a href="javascript:openPushDetail(\'' + full.id + '\',1)"><span style="color: #1420e1;">' + full.sendSuccessCnt + '</span></a>');
                             } else {
                                 html.push('<a>0</a>');
                             }
@@ -153,7 +153,7 @@
                         "mRender": function (mData, type, full) {
                             var html = [];
                             if (full.sendFailCnt > 0) {
-                                html.push('<a href="javascript:openPushDetail(\'' + full.id + '\',0)"><span style="color: #167427;">' + full.sendFailCnt + '</span></a>');
+                                html.push('<a href="javascript:openPushDetail(\'' + full.id + '\',0)"><span style="color: #e12219;">' + full.sendFailCnt + '</span></a>');
 
                             } else {
                                 html.push('<a>0</a>');

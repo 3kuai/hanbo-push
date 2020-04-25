@@ -17,7 +17,6 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
 import java.util.Date;
 
 /**
@@ -57,17 +56,19 @@ public class PushUnDeliveryMsgJob {
 
             PushResponse pushResponse = clientDelegate.sendAndGet(pushRequest);
             log.info("推送消息，请求={} 应答={}", pushRequest, pushResponse);
-            boolean ok = (boolean) Lists.newArrayList(pushResponse.getExtraData().get(0).values()).get(0);
-            if (ok) {
-                DeviceMessageEntity deviceMessageEntity = deviceMessageRep.findOne((Long) immutableMap.get("d_m_id"));
-                deviceMessageEntity.setDeliveryState(1);
-                deviceMessageEntity.setUpdateTime(new Date());
-                deviceMessageRep.save(deviceMessageEntity);
-                MessageEntity messageEntity = deviceMessageEntity.getMessageEntity();
-                messageEntity.setSendSuccessCnt(messageEntity.getSendSuccessCnt() + 1);
-                messageEntity.setSendFailCnt(messageEntity.getSendFailCnt() - 1);
-                messageEntity.setUpdateTime(new Date());
-                messageRep.save(messageEntity);
+            if (pushResponse != null && !pushResponse.getExtraData().isEmpty()) {
+                boolean ok = (boolean) Lists.newArrayList(pushResponse.getExtraData().get(0).values()).get(0);
+                if (ok) {
+                    DeviceMessageEntity deviceMessageEntity = deviceMessageRep.findOne((Long) immutableMap.get("d_m_id"));
+                    deviceMessageEntity.setDeliveryState(1);
+                    deviceMessageEntity.setUpdateTime(new Date());
+                    deviceMessageRep.save(deviceMessageEntity);
+                    MessageEntity messageEntity = deviceMessageEntity.getMessageEntity();
+                    messageEntity.setSendSuccessCnt(messageEntity.getSendSuccessCnt() + 1);
+                    messageEntity.setSendFailCnt(messageEntity.getSendFailCnt() - 1);
+                    messageEntity.setUpdateTime(new Date());
+                    messageRep.save(messageEntity);
+                }
             }
         });
         log.info("定时发送推送消息结束");

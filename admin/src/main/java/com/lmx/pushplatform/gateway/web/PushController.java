@@ -5,16 +5,17 @@ import com.google.common.collect.Sets;
 import com.lmx.pushplatform.client.DynamicConnector;
 import com.lmx.pushplatform.gateway.api.CommonResp;
 import com.lmx.pushplatform.gateway.api.PushReq;
+import com.lmx.pushplatform.gateway.api.StaticsReq;
 import com.lmx.pushplatform.gateway.dao.AppRep;
 import com.lmx.pushplatform.gateway.dao.DeviceMessageRep;
 import com.lmx.pushplatform.gateway.dao.MessageRep;
 import com.lmx.pushplatform.gateway.entity.*;
+import com.lmx.pushplatform.gateway.util.DateUtil;
 import com.lmx.pushplatform.proto.PushRequest;
 import com.lmx.pushplatform.proto.PushResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.*;
-import org.springframework.data.jpa.domain.JpaSort;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -22,11 +23,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import javax.persistence.metamodel.Attribute;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @RestController
@@ -157,5 +154,56 @@ public class PushController {
         resp.setRecordsTotal((int) page.getTotalElements());
         resp.setRecordsFiltered(resp.getRecordsTotal());
         return resp;
+    }
+
+    @PostMapping("admin/chartInfo")
+    public CommonResp chartInfo(StaticsReq staticsReq) {
+        List<String> triggerDayList = new ArrayList<String>();
+        List<Integer> triggerDayCountRunningList = new ArrayList<Integer>();
+        List<Integer> triggerDayCountSucList = new ArrayList<Integer>();
+        List<Integer> triggerDayCountFailList = new ArrayList<Integer>();
+        int triggerCountRunningTotal = 0;
+        int triggerCountSucTotal = 0;
+        int triggerCountFailTotal = 0;
+
+        List<MessageEntity> logReportList = messageRep.findByCreateTimeBetween(DateUtil.parseDateTime(staticsReq.getStartDate()),
+                DateUtil.parseDateTime(staticsReq.getEndDate()));
+
+        if (logReportList != null && logReportList.size() > 0) {
+            for (MessageEntity item : logReportList) {
+                String day = DateUtil.formatDate(item.getCreateTime());
+                int triggerDayCountRunning = item.getTotalCnt();
+                int triggerDayCountSuc = item.getSendSuccessCnt();
+                int triggerDayCountFail = item.getSendFailCnt();
+
+                triggerDayList.add(day);
+                triggerDayCountRunningList.add(triggerDayCountRunning);
+                triggerDayCountSucList.add(triggerDayCountSuc);
+                triggerDayCountFailList.add(triggerDayCountFail);
+
+                triggerCountRunningTotal += triggerDayCountRunning;
+                triggerCountSucTotal += triggerDayCountSuc;
+                triggerCountFailTotal += triggerDayCountFail;
+            }
+        } else {
+            for (int i = -6; i <= 0; i++) {
+                triggerDayList.add(DateUtil.formatDate(DateUtil.addDays(new Date(), i)));
+                triggerDayCountRunningList.add(0);
+                triggerDayCountSucList.add(0);
+                triggerDayCountFailList.add(0);
+            }
+        }
+
+        Map<String, Object> result = new HashMap<String, Object>();
+        result.put("triggerDayList", triggerDayList);
+        result.put("triggerDayCountRunningList", triggerDayCountRunningList);
+        result.put("triggerDayCountSucList", triggerDayCountSucList);
+        result.put("triggerDayCountFailList", triggerDayCountFailList);
+
+        result.put("triggerCountRunningTotal", triggerCountRunningTotal);
+        result.put("triggerCountSucTotal", triggerCountSucTotal);
+        result.put("triggerCountFailTotal", triggerCountFailTotal);
+
+        return CommonResp.defaultSuccess(result);
     }
 }
