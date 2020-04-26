@@ -40,10 +40,18 @@ public class WebSocketFrameHandler extends SimpleChannelInboundHandler<WebSocket
         if (frame instanceof TextWebSocketFrame) {
             String request = ((TextWebSocketFrame) frame).text();
             PushRequest pushRequest = JSONObject.parseObject(request, PushRequest.class);
-            //心跳
+            //和页面保持心跳
             if (pushRequest.getMsgType() == 3) {
                 TextWebSocketFrame textWebSocketFrame = new TextWebSocketFrame("{\"msgContent\":\"pong\",\"msgType\":3}");
                 ctx.writeAndFlush(textWebSocketFrame);
+                //和push-server保持心跳
+                PushRequest regApp = new PushRequest();
+                regApp.setMsgType(3);
+                regApp.setAppKey(pushRequest.getAppKey());
+                regApp.setFromId(pushRequest.getFromId());
+                regApp.setPushType(1);
+                regApp.setPlatform(3);
+                pushClientMap.get(pushRequest.getAppKey()).sendOnly(regApp);
                 return;
             }
             //推送消息
@@ -52,17 +60,14 @@ public class WebSocketFrameHandler extends SimpleChannelInboundHandler<WebSocket
                 if (!pushClientMap.containsKey(appKey)) {
                     ctx.channel().attr(attributeAppKey).set(appKey);
                     //注册ws客户端回调
-                    DynamicConnector clientDelegate = new DynamicConnector(ctx);
+                    DynamicConnector clientDelegate = new DynamicConnector(pushRequest.getFromId(), ctx);
                     pushClientMap.put(appKey, clientDelegate);
-                } else {
-                    DynamicConnector clientDelegate = pushClientMap.get(appKey);
-                    for (Connector client : clientDelegate.getClients()) {
-                        client.addCallBack(ctx);
-                    }
                 }
                 PushRequest regApp = new PushRequest();
                 regApp.setMsgType(0);
-                regApp.setFromId(appKey);
+                regApp.setAppKey(appKey);
+                regApp.setFromId(pushRequest.getFromId());
+                regApp.setPlatform(3);
                 //注册proxy client发送注册路由请求
                 pushClientMap.get(appKey).sendOnly(regApp);
             }
@@ -72,7 +77,7 @@ public class WebSocketFrameHandler extends SimpleChannelInboundHandler<WebSocket
                     String fromId = pushRequest.getFromId();
                     if (!channelHandlerContextMap.containsKey(fromId)) {
                         //注册ws客户端回调
-                        DynamicConnector clientDelegate = new DynamicConnector(ctx);
+                        DynamicConnector clientDelegate = new DynamicConnector(fromId, ctx);
                         ctx.channel().attr(attributeKey).set(fromId);
                         channelHandlerContextMap.put(fromId, ctx);
                         imClientMap.put(fromId, clientDelegate);

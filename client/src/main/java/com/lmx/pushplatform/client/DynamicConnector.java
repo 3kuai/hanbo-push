@@ -26,12 +26,12 @@ public class DynamicConnector {
         }
     }
 
-    public DynamicConnector(ChannelHandlerContext channelHandlerContext) {
+    public DynamicConnector(String key, ChannelHandlerContext channelHandlerContext) {
         try {
             InnerEventBus.reg(this);
             LOGGER.info("subscribe pushService thread started");
             subscriber.subScribeApp();
-            initConnect(channelHandlerContext);
+            initConnect(key, channelHandlerContext);
         } catch (Exception e) {
             LOGGER.error("", e);
         }
@@ -40,6 +40,11 @@ public class DynamicConnector {
     public void initConnect(ChannelHandlerContext channelHandlerContext) {
         List<String> hosts = subscriber.getServiceAddress();
         consistencyHashRouter.initHashCycle(hosts, channelHandlerContext);
+    }
+
+    public void initConnect(String key, ChannelHandlerContext channelHandlerContext) {
+        List<String> hosts = subscriber.getServiceAddress();
+        consistencyHashRouter.initHashCycle(hosts, channelHandlerContext, key);
     }
 
     public void initConnect() {

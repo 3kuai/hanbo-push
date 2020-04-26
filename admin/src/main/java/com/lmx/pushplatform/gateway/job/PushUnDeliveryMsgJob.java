@@ -33,7 +33,7 @@ public class PushUnDeliveryMsgJob {
     private DeviceMessageRep deviceMessageRep;
     @Autowired
     private MessageRep messageRep;
-    private final static String SQL = "SELECT tmp.message_title,tmp.message_content,tdm.device_id,tdm.app_name,tdm.id " +
+    private final static String SQL = "SELECT tmp.platform,tmp.message_content,tdm.device_id,tdm.app_name,tdm.id " +
             "FROM `t_device_message` tdm " +
             "inner join t_message_push tmp on tdm.message_id=tmp.id " +
             "where tdm.delivery_state=0;";
@@ -42,7 +42,7 @@ public class PushUnDeliveryMsgJob {
     @Transactional(rollbackFor = Exception.class)
     public void handler() {
         log.info("定时发送推送消息开始");
-        jdbcTemplate.query(SQL, (RowMapper<ImmutableMap>) (resultSet, i) -> ImmutableMap.of("messageTitle", resultSet.getString(1),
+        jdbcTemplate.query(SQL, (RowMapper<ImmutableMap>) (resultSet, i) -> ImmutableMap.of("platform", resultSet.getInt(1),
                 "messageContent", resultSet.getString(2),
                 "deviceId", resultSet.getString(3),
                 "d_m_id", resultSet.getLong(5),
@@ -51,6 +51,7 @@ public class PushUnDeliveryMsgJob {
             pushRequest.setMsgType(PushRequest.MessageType.DILIVERY_MSG.ordinal());
             pushRequest.setMsgContent((String) immutableMap.get("messageContent"));
             pushRequest.setFromId("admin");
+            pushRequest.setPlatform((Integer) immutableMap.get("platform"));
             pushRequest.setToId(Lists.newArrayList((String) immutableMap.get("deviceId")));
             pushRequest.setAppKey((String) immutableMap.get("appName"));
 

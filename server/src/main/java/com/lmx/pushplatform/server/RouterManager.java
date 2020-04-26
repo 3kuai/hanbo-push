@@ -35,8 +35,7 @@ public class RouterManager {
     }
 
     public static String renewRouter(PushRequest request) {
-        String regId = request.getFromId();
-        String realRegId = getLocalRouter(request, regId);
+        String realRegId = getLocalRouter(request, request.getFromId());
         Jedis jedis = jedisPool.getResource();
         jedis.setex(realRegId, 60 * 5, PushServer.host + SPLITTER + PushServer.port);
         jedis.close();
@@ -44,8 +43,7 @@ public class RouterManager {
     }
 
     public static String regRouter(PushRequest request) {
-        String regId = request.getFromId();
-        String realRegId = getLocalRouter(request, regId);
+        String realRegId = getLocalRouter(request, request.getFromId());
         Jedis jedis = jedisPool.getResource();
         //1分钟过期，通过心跳延长
         jedis.setex(realRegId, 60, PushServer.host + SPLITTER + PushServer.port);
@@ -57,10 +55,10 @@ public class RouterManager {
         String realRegId = null;
         //推送
         if (request.getPushType() == PushRequest.PushType.PUSH.ordinal()) {
-            realRegId = request.getAppKey() + SPLITTER + PUSH_KEY_PREFIX + toId;
+            realRegId = request.getAppKey() + SPLITTER + request.getPlatform() + SPLITTER + PUSH_KEY_PREFIX + toId;
         }//IM
         else if (request.getPushType() == PushRequest.PushType.IM.ordinal()) {
-            realRegId = request.getAppKey() + SPLITTER + IM_KEY_PREFIX + toId;
+            realRegId = request.getAppKey() + SPLITTER + request.getPlatform() + IM_KEY_PREFIX + toId;
         }
         return realRegId;
     }

@@ -41,6 +41,8 @@ public class PushServerHandler extends SimpleChannelInboundHandler<PushRequest> 
                 //仅android注册，ios直接走apns通道
                 if (request.getPlatform() == PushRequest.Platform.ANDROID.ordinal())
                     AndroidPushHelper.regChannel(ctx, request);
+                else if (request.getPlatform() == PushRequest.Platform.WEB.ordinal())
+                    WebPushHelper.regChannel(ctx, request);
                 break;
             /**
              *  消息事件：
@@ -57,8 +59,13 @@ public class PushServerHandler extends SimpleChannelInboundHandler<PushRequest> 
                     //ios推送走apns
                     if (request.getPlatform() == PushRequest.Platform.IOS.ordinal()) {
                         IosPushHelper.sendMsg(toId, "", request.getMsgContent());
-                    } else {
+                    } else if (request.getPlatform() == PushRequest.Platform.ANDROID.ordinal()) {
                         boolean sendState = AndroidPushHelper.sendMsg(request, toId);
+                        resp.put(toId, sendState);
+                        list.add(resp);
+                    } else if (request.getPlatform() == PushRequest.Platform.WEB.ordinal()) {
+                        //ws-server和push-server互通直连，所以只需要推一次即可
+                        boolean sendState = WebPushHelper.sendMsg(request, toId);
                         resp.put(toId, sendState);
                         list.add(resp);
                     }
@@ -100,6 +107,7 @@ public class PushServerHandler extends SimpleChannelInboundHandler<PushRequest> 
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
         LOGGER.error("", cause);
         AndroidPushHelper.unRegChannel(ctx);
+        WebPushHelper.unRegChannel(ctx);
     }
 
     @Override

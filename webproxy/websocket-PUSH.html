@@ -2,7 +2,8 @@
 <head><title>Web Socket Test</title></head>
 <body>
 <form onsubmit="return false;">
-
+    <input type="text" id="appKey" placeholder="stock-app">
+    <input type="text" id="deviceId" placeholder="输入设备号（注册的手机号）">
     <input type="button" value="注册推送"
            onclick="send()"/>
     <input type="button" value="关闭聊天"
@@ -30,7 +31,8 @@
                 this.serverTimeoutObj && clearTimeout(this.serverTimeoutObj);
                 this.timeoutObj = setTimeout(function () {
                         console.log('heartCheck start');
-                        socket.send("{\"msgType\":3}");
+                        var ap = $("#appKey").val();
+                        socket.send("{\"msgType\":3,\"appKey\":'" + ap + "',\"fromId\":'" + $("#deviceId").val() + "' }");
                         self.serverTimeoutObj = setTimeout(function () {
                             if (!h_resp) {
                                 console.log('wait timeOut,close ws client');
@@ -53,7 +55,10 @@
         socket.onopen = function (event) {
             var ta = document.getElementById('responseText');
             ta.value = "Web Socket opened!";
-            heartCheck.start();
+            setTimeout(function () {
+                heartCheck.start();
+            }, 10000)
+
         };
         socket.onclose = function (event) {
             var ta = document.getElementById('responseText');
@@ -67,8 +72,14 @@
             return;
         }
         if (socket.readyState == WebSocket.OPEN) {
-            var reg;
-            reg = {"msgType": 0, "fromId": "android001", "pushType": 1, "appKey": "c8b1a74c11784fceb53d65f37c63439f"};
+            alert($("#appKey").val());
+            var reg = {
+                "msgType": 0,
+                "fromId": $("#deviceId").val(),
+                "pushType": 1,
+                "appKey": $("#appKey").val(),
+                "platform": 3
+            };
             socket.send(JSON.stringify(reg));
         } else {
             alert("The socket is not open.");

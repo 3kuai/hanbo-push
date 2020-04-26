@@ -31,8 +31,24 @@ public class ConsistencyHashRouter {
             Connector client = new Connector();
             client.initConn(HostAndPort.fromString(node).getHostText(),
                     HostAndPort.fromString(node).getPort());
-            if (channelHandlerContext != null)
-                client.addCallBack(channelHandlerContext);
+            realClients.add(client);
+            hashCycle.put(hash(node), client);
+            for (int j = 0; j < VIRTUAL_NODE_FACTOR; j++) {
+                hashCycle.put(hash(node + "_VIRTUAL_" + j), client);
+            }
+        }
+    }
+
+    public void initHashCycle(List<String> nodes, ChannelHandlerContext channelHandlerContext, String key) {
+        realClientNodes.addAll(nodes);
+        for (int i = 0; i < nodes.size(); i++) {
+            String node = nodes.get(i);
+            Connector client = new Connector();
+            client.initConn(HostAndPort.fromString(node).getHostText(),
+                    HostAndPort.fromString(node).getPort());
+            if (channelHandlerContext != null) {
+                client.addCallBack(key, channelHandlerContext);
+            }
             realClients.add(client);
             hashCycle.put(hash(node), client);
             for (int j = 0; j < VIRTUAL_NODE_FACTOR; j++) {

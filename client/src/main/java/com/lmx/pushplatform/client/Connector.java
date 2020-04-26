@@ -14,6 +14,8 @@ import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -29,7 +31,7 @@ public class Connector extends SimpleChannelInboundHandler<PushResponse> {
     private final Logger LOGGER = LoggerFactory.getLogger(Connector.class);
     private String host;
     private int port;
-    private List<ChannelHandlerContext> destChannels = new CopyOnWriteArrayList<>();
+    private Map<String, ChannelHandlerContext> destChannels = new ConcurrentHashMap<>();
     private EventLoopGroup group = new NioEventLoopGroup();
 
     @Override
@@ -37,16 +39,16 @@ public class Connector extends SimpleChannelInboundHandler<PushResponse> {
         return host + ":" + port;
     }
 
-    public void addCallBack(ChannelHandlerContext context) {
-        this.destChannels.add(context);
+    public void addCallBack(String key, ChannelHandlerContext context) {
+        this.destChannels.put(key, context);
     }
 
-    public List<ChannelHandlerContext> getCallBackClients() {
-        return this.destChannels;
+    public Collection<ChannelHandlerContext> getCallBackClients() {
+        return this.destChannels.values();
     }
 
-    public void initConn(String host, int port, ChannelHandlerContext channel) {
-        this.destChannels.add(channel);
+    public void initConn(String host, int port, String key, ChannelHandlerContext channel) {
+        this.destChannels.put(key, channel);
         this.initConn(host, port);
     }
 
@@ -79,15 +81,14 @@ public class Connector extends SimpleChannelInboundHandler<PushResponse> {
         String seqNo = response.getRequestId();
         LOGGER.info("receive message={}", response);
         if (seqNo == null) {
-            for (ChannelHandlerContext channel : destChannels) {
-                //坏连接则剔除
-                if (!channel.channel().isOpen()) {
-                    destChannels.remove(channel);
-                    continue;
-                }
-                TextWebSocketFrame textWebSocketFrame = new TextWebSocketFrame(JSONObject.toJSONString(response));
-                channel.writeAndFlush(textWebSocketFrame);
+            String key = response.getToId().get(0);
+            ChannelHandlerContext channel = destChannels.get(key);
+            //坏连接则剔除
+            if (!channel.channel().isOpen()) {
+                destChannels.remove(key);
             }
+            TextWebSocketFrame textWebSocketFrame = new TextWebSocketFrame(JSONObject.toJSONString(response));
+            channel.writeAndFlush(textWebSocketFrame);
             return;
         }
         SendFuture future = SEND_FUTURE_MAP.remove(seqNo);
