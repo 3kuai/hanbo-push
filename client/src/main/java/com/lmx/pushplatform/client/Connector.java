@@ -129,6 +129,7 @@ public class Connector extends SimpleChannelInboundHandler<PushResponse> {
         if (destChannels.values().size() > 0) {
             destChannels.values().forEach(ChannelOutboundInvoker::close);
         }
+        getCallBackClients().clear();
         group.shutdownGracefully();
     }
 

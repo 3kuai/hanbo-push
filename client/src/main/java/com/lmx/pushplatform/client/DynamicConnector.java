@@ -10,7 +10,7 @@ import org.slf4j.LoggerFactory;
 import java.util.List;
 
 public class DynamicConnector {
-    private ServiceSubscriber subscriber = ServiceSubscriber.getServiceSubscriber();
+    private ServiceSubscriber subscriber = ServiceSubscriber.getInstance();
     private ConsistencyHashRouter consistencyHashRouter = new ConsistencyHashRouter();
     private final Logger LOGGER = LoggerFactory.getLogger(DynamicConnector.class);
     final static int RETRY_TIMES = 3;
@@ -102,19 +102,10 @@ public class DynamicConnector {
         return consistencyHashRouter.router(key);
     }
 
-    public synchronized void removeImCallBackChannel(ChannelHandlerContext channelHandlerContext) {
+    public synchronized void removeCallBackChannel() {
+        InnerEventBus.unReg(this);
         for (Connector c : consistencyHashRouter.getRealClients()) {
-            c.getCallBackClients().remove(channelHandlerContext);
             c.close();
-        }
-    }
-
-    public synchronized void removeAppCallBackChannel(ChannelHandlerContext channelHandlerContext) {
-        for (Connector c : consistencyHashRouter.getRealClients()) {
-            c.getCallBackClients().remove(channelHandlerContext);
-            if (c.getCallBackClients().size() == 0) {
-                c.close();
-            }
         }
     }
 }

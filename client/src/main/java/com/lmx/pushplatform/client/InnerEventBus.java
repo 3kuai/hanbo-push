@@ -12,4 +12,8 @@ public class InnerEventBus {
     public static void reg(Object o) {
         eventBus.register(o);
     }
+
+    public static void unReg(Object o) {
+        eventBus.unregister(o);
+    }
 }

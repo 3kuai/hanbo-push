@@ -101,17 +101,22 @@ public class PushServerHandler extends SimpleChannelInboundHandler<PushRequest> 
         super.channelInactive(ctx);
         LOGGER.debug("disconnect channel={}", ctx.channel());
         ctx.close();
+        closePush(ctx);
     }
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
         LOGGER.error("", cause);
-        AndroidPushHelper.unRegChannel(ctx);
-        WebPushHelper.unRegChannel(ctx);
+        closePush(ctx);
     }
 
     @Override
     public void channelWritabilityChanged(ChannelHandlerContext ctx) throws Exception {
         ctx.channel().isWritable();
+    }
+
+    void closePush(ChannelHandlerContext ctx) {
+        AndroidPushHelper.unRegChannel(ctx);
+        WebPushHelper.unRegChannel(ctx);
     }
 }

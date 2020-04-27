@@ -2,11 +2,11 @@
 <head><title>Web Socket Test</title></head>
 <body>
 <form onsubmit="return false;">
-    <input type="text" id="appKey" placeholder="stock-app">
+    <input type="text" id="appKey" placeholder="输入应用名（APPNAME）">
     <input type="text" id="deviceId" placeholder="输入设备号（注册的手机号）">
     <input type="button" value="注册推送"
            onclick="send()"/>
-    <input type="button" value="关闭聊天"
+    <input type="button" value="关闭推送"
            onclick="socket.close()"/>
     <h3>Output</h3>
     <textarea id="responseText" style="width:500px;height:300px;"></textarea>
@@ -55,9 +55,6 @@
         socket.onopen = function (event) {
             var ta = document.getElementById('responseText');
             ta.value = "Web Socket opened!";
-            setTimeout(function () {
-                heartCheck.start();
-            }, 30000)
         };
         socket.onclose = function (event) {
             var ta = document.getElementById('responseText');
@@ -71,7 +68,7 @@
             return;
         }
         if (socket.readyState == WebSocket.OPEN) {
-            alert($("#appKey").val());
+            
             var reg = {
                 "msgType": 0,
                 "fromId": $("#deviceId").val(),
@@ -80,6 +77,12 @@
                 "platform": 3
             };
             socket.send(JSON.stringify(reg));
+			
+			alert('注册推送成功');
+			
+			setTimeout(function () {
+                heartCheck.start();
+            }, 10000)
         } else {
             alert("The socket is not open.");
         }

@@ -2,9 +2,6 @@ package com.lmx.pushplatform.webproxy;
 
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
-import com.google.common.base.Joiner;
-import com.google.common.collect.Lists;
-import com.lmx.pushplatform.client.Connector;
 import com.lmx.pushplatform.client.DynamicConnector;
 import com.lmx.pushplatform.proto.PushRequest;
 import io.netty.channel.ChannelHandler;
@@ -27,7 +24,7 @@ public class WebSocketFrameHandler extends SimpleChannelInboundHandler<WebSocket
     private Map<String, DynamicConnector> imClientMap = new ConcurrentHashMap<>(12);
     private Map<String, ChannelHandlerContext> channelHandlerContextMap = new ConcurrentHashMap<>(12);
     private AttributeKey<String> attributeKey = AttributeKey.newInstance("regIdentify");
-    private AttributeKey<String> attributeAppKey = AttributeKey.newInstance("regAppIdentify");
+    private AttributeKey<String> attributeUserKey = AttributeKey.newInstance("regUserIdentify");
 
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, WebSocketFrame frame) throws Exception {
@@ -51,25 +48,26 @@ public class WebSocketFrameHandler extends SimpleChannelInboundHandler<WebSocket
                 regApp.setFromId(pushRequest.getFromId());
                 regApp.setPushType(1);
                 regApp.setPlatform(3);
-                pushClientMap.get(pushRequest.getAppKey()).sendOnly(regApp);
+                pushClientMap.get(pushRequest.getFromId()).sendOnly(regApp);
                 return;
             }
             //推送消息
             if (pushRequest.getMsgType() == 0 && pushRequest.getPushType() == 1) {
+                String fromId = pushRequest.getFromId();
                 String appKey = pushRequest.getAppKey();
-                if (!pushClientMap.containsKey(appKey)) {
-                    ctx.channel().attr(attributeAppKey).set(appKey);
-                    //注册ws客户端回调
+                if (!pushClientMap.containsKey(fromId)) {
+                    ctx.channel().attr(attributeUserKey).set(fromId);
+                    //注册ws客户端回调:一个channel对应一个用户
                     DynamicConnector clientDelegate = new DynamicConnector(pushRequest.getFromId(), ctx);
-                    pushClientMap.put(appKey, clientDelegate);
+                    pushClientMap.put(fromId, clientDelegate);
                 }
                 PushRequest regApp = new PushRequest();
                 regApp.setMsgType(0);
                 regApp.setAppKey(appKey);
-                regApp.setFromId(pushRequest.getFromId());
+                regApp.setFromId(fromId);
                 regApp.setPlatform(3);
                 //注册proxy client发送注册路由请求
-                pushClientMap.get(appKey).sendOnly(regApp);
+                pushClientMap.get(fromId).sendOnly(regApp);
             }
             //IM注册
             else if (pushRequest.getMsgType() == 0 && pushRequest.getPushType() == 2) {
@@ -118,16 +116,17 @@ public class WebSocketFrameHandler extends SimpleChannelInboundHandler<WebSocket
             channelHandlerContextMap.values().remove(ctx);
             String regId = ctx.channel().attr(attributeKey).get();
             //卸载ws回调
-            imClientMap.get(regId).removeImCallBackChannel(ctx);
+            imClientMap.get(regId).removeCallBackChannel();
             //卸载代理连接
             imClientMap.remove(regId);
             return;
         }
         //推送卸载
-        String appKey = ctx.channel().attr(attributeAppKey).get();
-        if (appKey != null && pushClientMap.containsKey(appKey)) {
-            pushClientMap.get(appKey).removeAppCallBackChannel(ctx);
-            pushClientMap.remove(appKey);
+        String formId = ctx.channel().attr(attributeUserKey).get();
+        if (formId != null && pushClientMap.containsKey(formId)) {
+            DynamicConnector connector = pushClientMap.get(formId);
+            connector.removeCallBackChannel();
+            pushClientMap.remove(formId);
         }
     }
 }
