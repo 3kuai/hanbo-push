@@ -57,12 +57,11 @@
             ta.value = "Web Socket opened!";
             setTimeout(function () {
                 heartCheck.start();
-            }, 10000)
-
+            }, 30000)
         };
         socket.onclose = function (event) {
             var ta = document.getElementById('responseText');
-            ta.value = ta.value + "Web Socket closed";
+            ta.value = ta.value + '\n' + "Web Socket closed";
         };
     } else {
         alert("Your browser does not support Web Socket.");
